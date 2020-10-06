@@ -25,6 +25,8 @@ const styles = html`<style>
 </style>`
 
 export default function () {
+    let created = false
+
     const state = observe(
         {
             sortBy: null,
@@ -41,6 +43,8 @@ export default function () {
     )
 
     window.s = state
+
+    let filteredData = []
 
     const debounceSearch = debounce(function (ev) {
         state.searchText = ev.target.value
@@ -94,13 +98,11 @@ export default function () {
     const showPaginator = props => props.paginator && typeof props.paginator === 'object'
 
     const totalRecordCount = props => {
-        return props.getData ? props.recordCount : state.displayData.length
+        return props.getData ? props.recordCount : filteredData.length
     }
 
-    const filteredData = props => {
-        let start = (props.page - 1) * props.pageSize
-
-        let result = state.displayData.slice()
+    const filterData = props => {
+        let result = props.data.slice()
 
         // filter by search text
         if (state.searchText) {
@@ -118,14 +120,12 @@ export default function () {
                 return a[key] === b[key] ? 0 : a[key] > b[key] ? sgn : -sgn
             })
         }
-
-        if (showPaginator(props)) result = result.slice(start, start + props.pageSize)
-
+        console.log('FILTER DATA')
         return result
     }
 
     const getDisplayData = async props => {
-        state.displayData = props.getData
+        let result = props.getData
             ? await props.getData({
                   sortBy: state.sortBy,
                   sortDesc: state.sortDesc,
@@ -133,43 +133,55 @@ export default function () {
                   pageSize: state.pageSize,
                   query: state.searchText
               })
-            : filteredData(props)
+            : filteredData
+
+        if (showPaginator(props)) {
+            let start = (state.page - 1) * state.pageSize
+            result = result.slice(start, start + state.pageSize)
+        }
+
+        state.displayData = result
+
+        // console.log('GET DISPLAY DATA:', state.displayData)
     }
 
     return (props = {}) => {
-        let {
-            // data
-            data = [],
-            getData = undefined,
-            recordCount = null,
-            columns = [],
+        props = Object.assign(
+            {
+                // data
+                data: [],
+                getData: null,
+                recordCount: null,
+                columns: [],
 
-            mustSort = null,
-            sortBy = null,
-            sortDesc = null,
+                mustSort: null,
+                sortBy: null,
+                sortDesc: null,
 
-            // paging, sorting and searching
-            page = 0,
-            pageSize = 5,
-            changePageSize = () => {},
-            changePage = () => {},
-            paginator = {},
-            pageSizeSelector = true,
+                // paging, sorting and searching
+                page: 0,
+                pageSize: 5,
+                changePageSize: () => {},
+                changePage: () => {},
+                paginator: {},
+                pageSizeSelector: true,
 
-            searchable = false,
+                searchable: false,
 
-            // display record stats
-            showCounts = true,
+                // display record stats
+                showCounts: true,
 
-            // slots
-            slot = null,
-            slotItem = null,
-            slotHeaderCell = null,
-            slotProgressBar = null,
-            slotTopRight = null,
-            slotPaginator = null,
-            slotExpand = null
-        } = props
+                // slots
+                slot: null,
+                slotItem: null,
+                slotHeaderCell: null,
+                slotProgressBar: null,
+                slotTopRight: null,
+                slotPaginator: null,
+                slotExpand: null
+            },
+            props
+        )
 
         // Certain props will be controlled locally
         // The parent will only concern itself with receiving events
@@ -193,39 +205,44 @@ export default function () {
         //     document.querySelector('#abc').shadowRoot.appendChild(s)
         // })
 
-        if (props.sortBy && !state.sortBy) {
+        if (!created) {
+            created = true
+            state.pageSize = props.pageSize
             state.sortBy = props.sortBy
             state.sortDesc = props.sortDesc
-            console.log('SORTBY')
+
+            state.page = totalPages(props) < props.page ? totalPages(props) : props.page
+
+            console.log('CREATED-HOOK')
         }
 
-        // if (typeof props.mustSort === 'boolean' && !state.mustSort) {
-        //     // state.sortBy = props.sortBy
-        //     // state.sortDesc = props.sortDesc
-        //     // console.log('MUSTSORT')
-        // }
-
         // Get the data to display, either from the backend or in the passed data prop
+
+        filteredData = filterData(props)
+
         getDisplayData(props)
 
-        return html`
+        console.time('± table')
+
+        const template = html`
             ${styles}
             <div class="data-table">
-                ${slot && slot()}
+                ${props.slot && props.slot()}
                 <div style="display: flex; align-items: end; justify-content: flex-end;">
                 
                     <!-- page size selector -->
                     ${
-                        (pageSizeSelector &&
+                        (props.pageSizeSelector &&
                             html`
                                 <div class="input-group d-flex align-items-center mb-3">
                                     Show
                                     <select
                                         style="max-width: 100px;"
                                         class="form-control mx-2"
-                                        .value=${pageSize}
+                                        .value=${props.pageSize}
                                         @change=${e => {
-                                            props.changePageSize(Number(e.target.value))
+                                            state.pageSize = Number(e.target.value)
+                                            // props.changePageSize(Number(e.target.value))
                                         }}
                                     >
                                         ${[5, 10, 25, 50, 100].map(
@@ -241,7 +258,7 @@ export default function () {
 
                     <!-- search box -->
                     ${
-                        searchable &&
+                        props.searchable &&
                         html`
                             <div class="input-group col-md-4">
                                 <input
@@ -259,14 +276,14 @@ export default function () {
                             </div>
                         `
                     }
-                    ${slotTopRight && slotTopRight()}
+                    ${props.slotTopRight && props.slotTopRight()}
                 </div>
 
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                ${columns.map(
+                                ${props.columns.map(
                                     col => html`
                                         <th
                                             Xkey="col.field"
@@ -274,7 +291,7 @@ export default function () {
                                             @click=${() => col.sortable && sort(col, props)}
                                             style="min-width: 50px; width: ${col.width}"
                                         >
-                                            ${(slotHeaderCell && slotHeaderCell(col)) ||
+                                            ${(props.slotHeaderCell && props.slotHeaderCell(col)) ||
                                             html`
                                                 <span>
                                                     ${col.iconPrefix &&
@@ -314,16 +331,16 @@ export default function () {
                         </thead>
 
                         <!-- Optional progress bar can be implemented at state slot in the parent -->
-                        ${slotProgressBar && slotProgressBar()}
+                        ${props.slotProgressBar && props.slotProgressBar()}
 
                         <tbody>
                             ${state.displayData.map(
                                 (row, index) => html`
                                     <tr @click=${() => toggleExpanded(row, props)}>
-                                        ${columns.map(
+                                        ${props.columns.map(
                                             col => html`
                                                 <td class=${itemClasses(col)}>
-                                                    ${(slotItem && slotItem()) ||
+                                                    ${(props.slotItem && props.slotItem()) ||
                                                     html` ${row[col.field]} `}
                                                 </td>
                                             `
@@ -331,7 +348,10 @@ export default function () {
                                     </tr>
 
                                     <!-- TODO: Expandable section does not work  -->
-                                    ${(row.$$expanded && slotExpand && slotExpand(row)) || null}
+                                    ${(row.$$expanded &&
+                                        props.slotExpand &&
+                                        props.slotExpand(row)) ||
+                                    null}
                                 `
                             )}
                         </tbody>
@@ -342,52 +362,54 @@ export default function () {
                     style="display: flex; align-items: center; justify-content: center; margin-top:15px;"
                 >
                     ${
-                        showCounts &&
+                        props.showCounts &&
                         html`
                             <span style="flex-grow: 1;"
-                                >Showing ${(page - 1) * pageSize + 1} to ${page * pageSize} of
+                                >Showing ${(state.page - 1) * state.pageSize + 1} to
+                                ${Math.min(state.page * state.pageSize, totalRecordCount(props))} of
                                 ${totalRecordCount(props)} entries</span
                             >
                         `
                     }
 
                     <!-- Add spacer if the paginator is right aligned -->
-                    ${(paginator.align === 'right' && html`<span style="flex-grow: 1;" />`) || null}
+                    ${
+                        (props.paginator.align === 'right' &&
+                            html`<span style="flex-grow: 1;" />`) ||
+                        null
+                    }
 
                     <!-- TODO: Paginator does not work  -->
                     ${
                         (showPaginator(props) &&
                             totalRecordCount(props) &&
-                            pageSize &&
+                            state.pageSize &&
                             html`
                                 <lion-pagination
                                     id="abc"
-                                    .count=${Math.ceil(totalRecordCount(props) / pageSize)}
-                                    .current=${page}
-                                    @current-changed="${e => changePage(e.target.current)}}"
+                                    .count=${Math.ceil(totalRecordCount(props) / state.pageSize)}
+                                    .current=${state.page}
+                                    @current-changed=${e => (state.page = e.target.current)}
+                                    Xcurrent-changed="${e => props.changePage(e.target.current)}}"
                                 ></lion-pagination>
                             `) ||
                         null
                     }
-                    ${(paginator.align === 'left' && html`<span style="flex-grow: 1;" />`) || null}
+                    ${
+                        (props.paginator.align === 'left' &&
+                            html`<span style="flex-grow: 1;" />`) ||
+                        null
+                    }
                 </div>
 
         </div>
             </div>
         `
+        console.timeEnd('± table')
+
+        return template
     }
 }
-
-//     created() {
-//         if (typeof state.mustSort === 'string') {
-//             state.sortBy = state.mustSort
-//             state.sortDesc = false
-//         } else state.sortBy = ''
-//     }
-
-//     mounted() {
-//         if (state.$scopedSlots.expand) state.expandable = true
-//     }
 
 //     watch: {
 //         pageSize(nv) {
