@@ -71,7 +71,11 @@ export default () => html`
 
     <!-- -->
     ${DataTable({
-        data: state.data,
+        // data: state.data,
+        getData: () => {
+            console.log('GETDATA:')
+            return Promise.resolve(state.data)
+        },
         columns: state.columns,
         page: state.page,
         paginator: state.paginator,

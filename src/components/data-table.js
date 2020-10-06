@@ -32,7 +32,7 @@ export default function () {
             searchText: '',
             page: 1,
             pageSize: 5,
-            _refresh: 0,
+            displayData: [],
             __handler(key, nv, ov, obj) {
                 // console.log('<<<<', key, nv, ov, obj)
             }
@@ -78,7 +78,7 @@ export default function () {
     }
 
     const filteredRecordCount = props => {
-        return filteredData(props).length
+        return displayData.length
     }
 
     const itemClasses = col =>
@@ -92,13 +92,15 @@ export default function () {
     const showPaginator = props => props.paginator && typeof props.paginator === 'object'
 
     const totalRecordCount = props => {
-        return props.getData ? props.recordCount : props.data.length
+        const data = state.displayData
+        return props.getData ? props.recordCount : data.length
     }
 
     const filteredData = props => {
+        const data = state.displayData
         let start = (props.page - 1) * props.pageSize
 
-        let result = props.data.slice()
+        let result = data.slice()
 
         // filter by search text
         if (state.searchText) {
@@ -122,20 +124,17 @@ export default function () {
         return result
     }
 
-    // const Paginator = props => {
-    //     if (!props.changePage) return null
-
-    //     const buttonCount = Math.floor(totalRecordCount(props) / props.pageSize) + 1
-    //     const buttons = Array(buttonCount)
-    //         .fill(1)
-    //         .map(
-    //             (v, i) =>
-    //                 html`<button @click=${() => props.changePage(i + 1)}>
-    //                     ${i}
-    //                 </button>`
-    //         )
-    //     return buttons
-    // }
+    const getDisplayData = async props => {
+        state.displayData = props.getData
+            ? await props.getData({
+                  sortBy: state.sortBy,
+                  sortDesc: state.sortDesc,
+                  page: state.page,
+                  pageSize: state.pageSize,
+                  query: state.searchText
+              })
+            : filteredData(props)
+    }
 
     return (props = {}) => {
         let {
@@ -205,6 +204,9 @@ export default function () {
         //     // state.sortDesc = props.sortDesc
         //     // console.log('MUSTSORT')
         // }
+
+        // Get the data to display, either from the backend or in the passed data prop
+        getDisplayData(props)
 
         return html`
             ${styles}
@@ -316,7 +318,7 @@ export default function () {
                         ${slotProgressBar && slotProgressBar()}
 
                         <tbody>
-                            ${filteredData(props).map(
+                            ${state.displayData.map(
                                 (row, index) => html`
                                     <tr @click=${() => toggleExpanded(row, props)}>
                                         ${columns.map(
