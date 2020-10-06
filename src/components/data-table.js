@@ -50,6 +50,8 @@ export default function () {
 
     const toggleExpanded = (row, props) => {
         if (!props.expandable) return
+        if (!row.hasOwnProperty('$$expanded'))
+            Object.defineProperty(row, '$$expanded', { enumerable: false, writable: true })
         row.$$expanded = !row.$$expanded
     }
 
