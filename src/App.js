@@ -71,11 +71,11 @@ export default () => html`
 
     <!-- -->
     ${DataTable({
-        // data: state.data,
-        getData: () => {
-            console.log('GETDATA:')
-            return Promise.resolve(state.data)
-        },
+        data: state.data,
+        // getData: () => {
+        //     console.log('GETDATA:')
+        //     return Promise.resolve(state.data)
+        // },
         columns: state.columns,
         page: state.page,
         paginator: state.paginator,
@@ -87,20 +87,18 @@ export default () => html`
         searchable: true,
         expandable: true,
         slotExpand,
-        changePage: page => (state.page = page),
+        XchangePage: page => (state.page = page),
         changePageSize: pageSize => (state.pageSize = pageSize)
     })}
 `
 
 function slotExpand(row) {
     return html`
-        <slot name="expand" v-bind="{row, index}">
-            <tr :key="'collapse'+index" style="background: lightyellow;">
-                <td colspan="100%">
-                    Expanded
-                    <pre>${json(row)}</pre>
-                </td>
-            </tr>
-        </slot>
+        <tr style="background: lightyellow;">
+            <td colspan="100%">
+                Expanded
+                <pre>${json(row)}</pre>
+            </td>
+        </tr>
     `
 }
