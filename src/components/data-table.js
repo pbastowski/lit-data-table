@@ -94,15 +94,13 @@ export default function () {
     const showPaginator = props => props.paginator && typeof props.paginator === 'object'
 
     const totalRecordCount = props => {
-        const data = state.displayData
-        return props.getData ? props.recordCount : data.length
+        return props.getData ? props.recordCount : state.displayData.length
     }
 
     const filteredData = props => {
-        const data = state.displayData
         let start = (props.page - 1) * props.pageSize
 
-        let result = data.slice()
+        let result = state.displayData.slice()
 
         // filter by search text
         if (state.searchText) {
@@ -152,7 +150,7 @@ export default function () {
 
             // paging, sorting and searching
             page = 0,
-            pageSize = 10,
+            pageSize = 5,
             changePageSize = () => {},
             changePage = () => {},
             paginator = {},
@@ -225,9 +223,8 @@ export default function () {
                                     <select
                                         style="max-width: 100px;"
                                         class="form-control mx-2"
-                                        .value=${props.pageSize}
+                                        .value=${pageSize}
                                         @change=${e => {
-                                            // props.pageSize = Number(e.target.value)
                                             props.changePageSize(Number(e.target.value))
                                         }}
                                     >
