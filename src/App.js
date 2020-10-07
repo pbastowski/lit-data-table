@@ -72,12 +72,13 @@ export default () => html`
     <!-- -->
     ${DataTable({
         data: state.data,
-        // getData: ({ page, pageSize }) => {
-        //     return Promise.resolve(state.data)
-        //     return Promise.resolve(state.data.slice((page - 1) * pageSize, page * pageSize))
-        // },
-        // recordCount: 11,
-        // localPagination: true,
+        getData: ({ page, pageSize }) => {
+            // console.log('GET DATA:')
+            return Promise.resolve(state.data)
+            return Promise.resolve(state.data.slice((page - 1) * pageSize, page * pageSize))
+        },
+        recordCount: 11,
+        localPagination: true,
         columns: state.columns,
         page: state.page,
         paginator: state.paginator,
