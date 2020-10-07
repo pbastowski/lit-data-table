@@ -26,6 +26,8 @@ const styles = html`<style>
 
 export default function () {
     let created = false
+    let _props
+    let filteredData = []
 
     const state = observe(
         {
@@ -34,17 +36,22 @@ export default function () {
             searchText: '',
             page: 1,
             pageSize: 5,
+
             displayData: [],
+
             __handler(key, nv, ov, obj) {
-                // console.log('<<<<', key, nv, ov, obj)
+                if (key[0] !== 'displayData') {
+                    filteredData = filterData(_props)
+
+                    getDisplayData(_props)
+                }
+                console.log('<<<<', key, nv, ov)
             }
         },
         { batch: true, bind: true }
     )
 
     window.s = state
-
-    let filteredData = []
 
     const debounceSearch = debounce(function (ev) {
         state.searchText = ev.target.value
@@ -84,7 +91,7 @@ export default function () {
     }
 
     const filteredRecordCount = props => {
-        return displayData.length
+        return state.displayData.length
     }
 
     const itemClasses = col =>
@@ -120,7 +127,7 @@ export default function () {
                 return a[key] === b[key] ? 0 : a[key] > b[key] ? sgn : -sgn
             })
         }
-        console.log('FILTER DATA')
+        // console.log('FILTER DATA')
         return result
     }
 
@@ -135,53 +142,52 @@ export default function () {
               })
             : filteredData
 
-        if (showPaginator(props)) {
+        if ((!props.getData && showPaginator(props)) || props.localPagination) {
             let start = (state.page - 1) * state.pageSize
             result = result.slice(start, start + state.pageSize)
         }
 
         state.displayData = result
 
-        // console.log('GET DISPLAY DATA:', state.displayData)
+        // console.log('GET DISPLAY DATA:', JSON.stringify(state.displayData))
     }
 
     return (props = {}) => {
-        props = Object.assign(
-            {
-                // data
-                data: [],
-                getData: null,
-                recordCount: null,
-                columns: [],
+        props = {
+            // data
+            data: [],
+            getData: null,
+            recordCount: null,
+            columns: [],
 
-                mustSort: null,
-                sortBy: null,
-                sortDesc: null,
+            mustSort: null,
+            sortBy: null,
+            sortDesc: null,
 
-                // paging, sorting and searching
-                page: 0,
-                pageSize: 5,
-                changePageSize: () => {},
-                changePage: () => {},
-                paginator: {},
-                pageSizeSelector: true,
+            // paging, sorting and searching
+            page: 0,
+            pageSize: 5,
+            changePageSize: () => {},
+            changePage: () => {},
+            paginator: {},
+            pageSizeSelector: true,
+            localPagination: false,
 
-                searchable: false,
+            searchable: false,
 
-                // display record stats
-                showCounts: true,
+            // display record stats
+            showCounts: true,
 
-                // slots
-                slot: null,
-                slotItem: null,
-                slotHeaderCell: null,
-                slotProgressBar: null,
-                slotTopRight: null,
-                slotPaginator: null,
-                slotExpand: null
-            },
-            props
-        )
+            // slots
+            slot: null,
+            slotItem: null,
+            slotHeaderCell: null,
+            slotProgressBar: null,
+            slotTopRight: null,
+            slotPaginator: null,
+            slotExpand: null,
+            ...props
+        }
 
         // Certain props will be controlled locally
         // The parent will only concern itself with receiving events
@@ -205,6 +211,8 @@ export default function () {
         //     document.querySelector('#abc').shadowRoot.appendChild(s)
         // })
 
+        _props = props
+
         if (!created) {
             created = true
             state.pageSize = props.pageSize
@@ -213,14 +221,17 @@ export default function () {
 
             state.page = totalPages(props) < props.page ? totalPages(props) : props.page
 
+            // filteredData = filterData(props)
+            // getDisplayData(props)
+
             console.log('CREATED-HOOK')
         }
 
         // Get the data to display, either from the backend or in the passed data prop
 
-        filteredData = filterData(props)
-
-        getDisplayData(props)
+        // filteredData = filterData(props)
+        //
+        // getDisplayData(props)
 
         console.time('± table')
 
@@ -239,14 +250,20 @@ export default function () {
                                     <select
                                         style="max-width: 100px;"
                                         class="form-control mx-2"
-                                        .value=${props.pageSize}
+                                        .value=${state.pageSize}
                                         @change=${e => {
                                             state.pageSize = Number(e.target.value)
                                             // props.changePageSize(Number(e.target.value))
                                         }}
                                     >
                                         ${[5, 10, 25, 50, 100].map(
-                                            size => html` <option .value=${size}>${size}</option>`
+                                            size =>
+                                                html` <option
+                                                    .value=${size}
+                                                    ?selected=${size === state.pageSize}
+                                                >
+                                                    ${size}
+                                                </option>`
                                         )}
                                     </select>
                                     entries
@@ -410,29 +427,3 @@ export default function () {
         return template
     }
 }
-
-//     watch: {
-//         pageSize(nv) {
-//             pageSize = nv
-//         },
-
-//         page(nv) {
-//             page = nv
-//         },
-
-//         async dataControls() {
-//             if (state.getData)
-//                 state.displayData = await state.getData({
-//                     sortBy: state.sortBy,
-//                     sortDesc: state.sortDesc,
-//                     page: page,
-//                     pageSize: pageSize,
-//                     query: state.searchText,
-//                 })
-//             else state.displayData = state.filteredData
-
-//             // Limit the page number to the available number of pages
-//             page =
-//                 state.totalPages < page ? state.totalPages : page
-//         }
-//     }
