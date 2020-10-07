@@ -62,15 +62,16 @@ const state = observe(
 export default () => html`
     <h1>Data Table</h1>
 
-    <h3 b1>
+    <!--<h3 b1>
         The table below fetches data directly from
         <small><code>jsonplaceholder.typicode.com/posts</code></small>
-    </h3>
+    </h3>-->
 
     <br />
 
     <!-- -->
     ${DataTable({
+        columns: state.columns,
         data: state.data,
         getData: ({ page, pageSize }) => {
             // console.log('GET DATA:')
@@ -78,20 +79,23 @@ export default () => html`
             return Promise.resolve(state.data.slice((page - 1) * pageSize, page * pageSize))
         },
         recordCount: 11,
-        localPagination: true,
-        columns: state.columns,
+
         page: state.page,
-        paginator: state.paginator,
+        // pageSize: state.pageSize,
         sortBy: 'b',
         sortDesc: false,
         mustSort: true,
-        // pageSize: state.pageSize,
+
+        paginator: state.paginator,
+        localPagination: true,
+        localSorting: true,
         pageSizeSelector: true,
         searchable: true,
         expandable: true,
-        slotExpand,
-        XchangePage: page => (state.page = page),
-        changePageSize: pageSize => (state.pageSize = pageSize)
+
+        slotExpand
+        // changePage: page => (state.page = page),
+        // changePageSize: pageSize => (state.pageSize = pageSize)
     })}
 `
 

@@ -28,16 +28,17 @@ export default function () {
     let created = false
     let _props
     let filteredData = []
+    let displayData = []
 
     const state = observe(
         {
+            page: 1,
+            pageSize: 5,
             sortBy: null,
             sortDesc: null,
             searchText: '',
-            page: 1,
-            pageSize: 5,
 
-            displayData: [],
+            // displayData: [],
 
             async __handler(key, nv, ov, obj) {
                 if (key[0] !== 'displayData') {
@@ -91,6 +92,7 @@ export default function () {
     }
 
     const filteredRecordCount = props => {
+        return displayData.length
         return state.displayData.length
     }
 
@@ -157,7 +159,8 @@ export default function () {
             result = result.slice(start, start + state.pageSize)
         }
 
-        state.displayData = result
+        displayData = result
+        // state.displayData = result
 
         // console.log('GET DISPLAY DATA:', JSON.stringify(state.displayData))
     }
@@ -182,6 +185,7 @@ export default function () {
             paginator: {},
             pageSizeSelector: true,
             localPagination: false,
+            localSorting: false,
 
             searchable: false,
 
@@ -199,29 +203,7 @@ export default function () {
             ...props
         }
 
-        // Certain props will be controlled locally
-        // The parent will only concern itself with receiving events
-        // about changes to the table, data selected, etc
-        // Object.assign(state, { pageSize, page })
-
-        // This is how we style elements inside web-components with a shadow-root
-        // requestAnimationFrame(() => {
-        //     const s = document.createElement('style')
-        //     s.innerHTML = `
-        //     ul li:not(:first-child):not(:last-child) button {
-        //         border-radius: 100%;
-        //         background: rgb(255, 98, 0);
-        //         xbackground: none;
-        //         font-size: 16px;
-        //         padding: 10px 15px;
-        //         color: white;
-        //         border: none;
-        //     }
-        //     `
-        //     document.querySelector('#abc').shadowRoot.appendChild(s)
-        // })
-
-        _props = props
+        _props = props // we need access to props in constructor functions
 
         if (!created) {
             created = true
@@ -231,17 +213,10 @@ export default function () {
 
             state.page = totalPages(props) < props.page ? totalPages(props) : props.page
 
-            // filteredData = filterData(props)
-            // getDisplayData(props)
-
             console.log('CREATED-HOOK')
         }
 
         // Get the data to display, either from the backend or in the passed data prop
-
-        // filteredData = filterData(props)
-        //
-        // getDisplayData(props)
 
         console.time('± table')
 
@@ -361,7 +336,7 @@ export default function () {
                         ${props.slotProgressBar && props.slotProgressBar()}
 
                         <tbody>
-                            ${state.displayData.map(
+                            ${displayData.map(
                                 (row, index) => html`
                                     <tr @click=${() => toggleExpanded(row, props)}>
                                         ${props.columns.map(
