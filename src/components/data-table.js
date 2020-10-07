@@ -39,13 +39,13 @@ export default function () {
 
             displayData: [],
 
-            __handler(key, nv, ov, obj) {
+            async __handler(key, nv, ov, obj) {
                 if (key[0] !== 'displayData') {
-                    filteredData = filterData(_props)
+                    filteredData = await filterData(_props)
 
                     getDisplayData(_props)
                 }
-                console.log('<<<<', key, nv, ov)
+                // console.log('<<<<', key, nv, ov)
             }
         },
         { batch: true, bind: true }
@@ -108,8 +108,17 @@ export default function () {
         return props.getData ? props.recordCount : filteredData.length
     }
 
-    const filterData = props => {
-        let result = props.data.slice()
+    const filterData = async props => {
+        // let result = props.data.slice()
+        let result = props.getData
+            ? await props.getData({
+                  sortBy: state.sortBy,
+                  sortDesc: state.sortDesc,
+                  page: state.page,
+                  pageSize: state.pageSize,
+                  query: state.searchText
+              })
+            : props.data.slice()
 
         // filter by search text
         if (state.searchText) {
@@ -132,15 +141,16 @@ export default function () {
     }
 
     const getDisplayData = async props => {
-        let result = props.getData
-            ? await props.getData({
-                  sortBy: state.sortBy,
-                  sortDesc: state.sortDesc,
-                  page: state.page,
-                  pageSize: state.pageSize,
-                  query: state.searchText
-              })
-            : filteredData
+        // let result = props.getData
+        //     ? await props.getData({
+        //           sortBy: state.sortBy,
+        //           sortDesc: state.sortDesc,
+        //           page: state.page,
+        //           pageSize: state.pageSize,
+        //           query: state.searchText
+        //       })
+        //     : filteredData
+        let result = await filterData(props)
 
         if ((!props.getData && showPaginator(props)) || props.localPagination) {
             let start = (state.page - 1) * state.pageSize
