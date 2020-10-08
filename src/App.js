@@ -111,7 +111,8 @@ export default () => html`
         searchable: true,
         expandable: true,
 
-        slotExpand
+        slotExpand,
+        slotItem
         // changePage: page => (state.page = page),
         // changePageSize: pageSize => (state.pageSize = pageSize)
     })}
@@ -155,4 +156,8 @@ function slotExpand(row) {
             </td>
         </tr>
     `
+}
+
+function slotItem(item, col, row) {
+    return item //html`${item}`
 }
