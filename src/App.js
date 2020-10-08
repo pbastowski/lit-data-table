@@ -91,6 +91,10 @@ export default () => html`
                     state.recordCount = parseInt(result.headers['x-total-count'], 10)
                     return result.data
                 })
+            // .catch(er => {
+            //     alert('Error !!!!!\n\n' + JSON.stringify(er))
+            //     return [{ title: 'Error!!!' }]
+            // })
         },
         recordCount: state.recordCount,
         // localPagination: true,

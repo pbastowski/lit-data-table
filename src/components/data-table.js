@@ -110,17 +110,24 @@ export default function () {
         return props.getData ? props.recordCount : filteredData.length
     }
 
+    let getDataError = null
     const filterData = async props => {
         // Get the data to display, either from the backend
         // or in the passed data prop.
+        getDataError = null
         let result = props.getData
-            ? await props.getData({
-                  sortBy: state.filters.sortBy,
-                  sortDesc: state.filters.sortDesc,
-                  page: state.filters.page,
-                  pageSize: state.filters.pageSize,
-                  query: state.filters.searchText
-              })
+            ? await props
+                  .getData({
+                      sortBy: state.filters.sortBy,
+                      sortDesc: state.filters.sortDesc,
+                      page: state.filters.page,
+                      pageSize: state.filters.pageSize,
+                      query: state.filters.searchText
+                  })
+                  .catch(er => {
+                      getDataError = er
+                      return []
+                  })
             : props.data.slice()
 
         // filter by search text
@@ -345,7 +352,16 @@ export default function () {
                                     null}
                                 `
                             )}
+                        ${
+                            getDataError &&
+                            html`<tr>
+                                <td colspan="100%" style="background: lightcoral;">
+                                    ${getDataError}
+                                </td>
+                            </tr>`
+                        }
                         </tbody>
+                        
                     </table>
                 </div>
 
