@@ -388,7 +388,7 @@ export default function () {
                 </div>
 
                 <div
-                    style="display: flex; align-items: center; justify-content: center; margin-top:15px;"
+                    style="display: flex; align-items: center; justify-content: center;"
                 >
                     ${
                         (props.showCounts &&
