@@ -210,7 +210,7 @@ export default function () {
             // console.log('CREATED-HOOK')
         }
 
-        console.time('± table')
+        // console.time('± table')
         const template = html`
             ${styles}
             <div class="data-table">
@@ -402,7 +402,7 @@ export default function () {
             </div>
         `
 
-        console.timeEnd('± table')
+        // console.timeEnd('± table')
         return template
     }
 }
