@@ -84,10 +84,9 @@ export default function () {
             'text-center': col.align === 'center',
             'pad-sort-right': col.align === 'center' || col.align === 'left',
             'pad-sort-left': col.align === 'right',
-            'text-right': col.align === 'right'
-        }) +
-        ' ' +
-        col.headerClass
+            'text-right': col.align === 'right',
+            [col.headerClass]: true
+        })
 
     const totalPages = props => {
         //console.log()
@@ -101,10 +100,9 @@ export default function () {
     const itemClasses = col =>
         classMap({
             'text-center': col.align === 'center',
-            'text-right': col.align === 'right'
-        }) +
-        ' ' +
-        col.itemClass
+            'text-right': col.align === 'right',
+            [col.itemClass]: true
+        })
 
     const showPaginator = props => props.paginator //&& typeof props.paginator === 'object'
 

@@ -100,7 +100,7 @@ export default () => html`
         // localPagination: true,
         columns: [
             { field: 'id', label: 'id', sortable: true, width: '60px' },
-            { field: 'title', label: 'Title', sortable: true }
+            { field: 'title', label: 'Title', sortable: true, align: 'center' }
         ],
         page: state.page,
         paginator: state.paginator,
