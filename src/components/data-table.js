@@ -257,7 +257,7 @@ export default function () {
                                             </option>`
                                     )}
                                 </select>
-                                entries
+                                rows
                             </div>
                             <span style="flex-grow: 1;" />
                         `
@@ -267,20 +267,23 @@ export default function () {
                     ${
                         props.searchable &&
                         html`
-                            <div class="input-group col-md-4">
+                            <span
+                                style="position:relative; width: 100%; min-width: 250px;"
+                                class="mb-3"
+                            >
+                                <i
+                                    class="fa fa-search"
+                                    style="position: absolute; right: 1rem; color: silver; top: 10px;"
+                                ></i>
                                 <input
                                     .value=${state.filters.searchText}
                                     @input=${debounceSearch}
                                     type="text"
                                     placeholder="Search..."
                                     class="form-control"
+                                    style="padding-right: 2.5rem"
                                 />
-                                <span class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="button">
-                                        <i class="fa fa-search"></i>
-                                    </button>
-                                </span>
-                            </div>
+                            </span>
                         `
                     }
                     ${props.slotTopRight && props.slotTopRight()}
@@ -397,7 +400,7 @@ export default function () {
                                         state.filters.page * state.filters.pageSize,
                                         totalRecordCount(props)
                                     )}
-                                    of ${totalRecordCount(props)} entries</span
+                                    of ${totalRecordCount(props)} records</span
                                 >
                             `) ||
                         null
