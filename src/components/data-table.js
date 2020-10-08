@@ -414,7 +414,7 @@ export default function () {
                         null
                     }
 
-                    <!-- TODO: Paginator does not work  -->
+                    <!-- Optionally display the paginator  -->
                     ${
                         (showPaginator(props) &&
                             totalRecordCount(props) &&
