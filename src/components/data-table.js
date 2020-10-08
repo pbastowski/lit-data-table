@@ -344,13 +344,15 @@ export default function () {
                         ${props.slotProgressBar && props.slotProgressBar()}
 
                         <tbody>
+                            <!-- data rows -->
                             ${state.displayData.map(
                                 (row, index) => html`
                                     <tr @click=${() => toggleExpanded(row, props)}>
                                         ${props.columns.map(
                                             col => html`
                                                 <td class=${itemClasses(col)}>
-                                                    ${(props.slotItem && props.slotItem()) ||
+                                                    ${(props.slotItem &&
+                                                        props.slotItem(row[col.field], col, row)) ||
                                                     html` ${row[col.field]} `}
                                                 </td>
                                             `
@@ -363,6 +365,7 @@ export default function () {
                                     null}
                                 `
                             )}
+                            
                             <!-- No records message -->
                             ${
                                 (totalRecordCount(props) === 0 &&
@@ -371,6 +374,7 @@ export default function () {
                                     </tr>`) ||
                                 null
                             }
+                            
                             <!-- error message -->
                             ${
                                 getDataError &&
