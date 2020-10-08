@@ -357,7 +357,6 @@ export default function () {
                                         )}
                                     </tr>
 
-                                    <!-- TODO: Expandable section does not work  -->
                                     ${(row.$$expanded &&
                                         props.slotExpand &&
                                         props.slotExpand(row)) ||
