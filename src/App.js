@@ -1,9 +1,11 @@
 import { html, observe, log, json } from './libs.js'
 import dataTable from './components/data-table.js'
+import http from 'axios'
 // import Test from './components/test-c.js'
 
 // console.log(Test())
 
+const ServerTable = new dataTable()
 const DataTable = new dataTable()
 // const DataTable = () => {}
 
@@ -70,25 +72,66 @@ export default () => html`
     <br />
 
     <!-- -->
-    ${DataTable({
-        columns: state.columns,
+    ${true &&
+    ServerTable({
         data: state.data,
-        getData: ({ page, pageSize }) => {
-            // console.log('GET DATA:')
-            return Promise.resolve(state.data)
-            return Promise.resolve(state.data.slice((page - 1) * pageSize, page * pageSize))
-        },
-        recordCount: 11,
+        getData({ sortBy, sortDesc, page, pageSize, query }) {
+            console.log('GETDATA')
+            let params = {
+                _sort: sortDesc != null ? sortBy : undefined,
+                _order: sortDesc != null ? (sortDesc ? 'desc' : 'asc') : undefined,
+                _page: page,
+                _limit: pageSize,
+                q: query
+            }
 
+            return http
+                .get('https://jsonplaceholder.typicode.com/posts', { params })
+                .then(result => {
+                    state.recordCount = parseInt(result.headers['x-total-count'], 10)
+                    return result.data
+                })
+        },
+        recordCount: state.recordCount,
+        // localPagination: true,
+        columns: [
+            { field: 'id', label: 'id', sortable: true, width: '60px' },
+            { field: 'title', label: 'Title', sortable: true }
+        ],
         page: state.page,
+        paginator: state.paginator,
+        sortBy: 'title',
+        // sortDesc: false,
+        mustSort: true,
+        pageSizeSelector: true,
+        searchable: true,
+        expandable: true,
+
+        slotExpand
+        // changePage: page => (state.page = page),
+        // changePageSize: pageSize => (state.pageSize = pageSize)
+    })}
+
+    <!-- -->
+    ${null &&
+    DataTable({
+        columns: state.columns,
+        data: JSON.parse(JSON.stringify(state.data)),
+        // getData: ({ page, pageSize }) => {
+        //     // console.log('GET DATA:')
+        //     return Promise.resolve(state.data)
+        //     return Promise.resolve(state.data.slice((page - 1) * pageSize, page * pageSize))
+        // },
+        // recordCount: 11,
+
+        page: 1, //state.page,
         // pageSize: state.pageSize,
         sortBy: 'b',
         sortDesc: false,
         mustSort: true,
 
-        paginator: state.paginator,
+        paginator: true,
         localPagination: true,
-        localSorting: true,
         pageSizeSelector: true,
         searchable: true,
         expandable: true,
