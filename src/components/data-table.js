@@ -162,12 +162,9 @@ export default function () {
 
     const getDisplayData = async props => {
         let result = await filterData(props)
-        console.log('getdisplaydata :1', recordCount, state.filters.page)
 
-        //const maxPages = Math.ceil(recordCount / state.filters.pageSize)
-
-        if (state.filters.page > totalPages(props)) state.filters.page = totalPages(props)
-        //if (state.filters.page > maxPages) state.filters.page = maxPages
+        const tp = totalPages(props)
+        if (state.filters.page > tp && tp > 0) state.filters.page = tp
 
         if ((!props.getData && showPaginator(props)) || props.localPagination) {
             let start = (state.filters.page - 1) * state.filters.pageSize
