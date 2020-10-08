@@ -28,6 +28,7 @@ export default function () {
     let created = false
     let _props
     let filteredData = []
+    let recordCount = 0
 
     const state = observe(
         {
@@ -88,8 +89,9 @@ export default function () {
         ' ' +
         col.headerClass
 
-    const totalPages = () => {
-        return Math.ceil(state.filters.totalRecordCount / state.filters.pageSize)
+    const totalPages = props => {
+        //console.log()
+        return Math.ceil(totalRecordCount(props) / state.filters.pageSize)
     }
 
     const filteredRecordCount = props => {
@@ -107,7 +109,8 @@ export default function () {
     const showPaginator = props => props.paginator //&& typeof props.paginator === 'object'
 
     const totalRecordCount = props => {
-        return props.getData ? props.recordCount : filteredData.length
+        // console.log('recordCount', recordCount)
+        return props.getData ? recordCount : filteredData.length
     }
 
     let getDataError = null
@@ -115,6 +118,7 @@ export default function () {
         // Get the data to display, either from the backend
         // or in the passed data prop.
         getDataError = null
+
         let result = props.getData
             ? await props
                   .getData({
@@ -129,6 +133,9 @@ export default function () {
                       return []
                   })
             : props.data.slice()
+
+        recordCount = result.recordCount
+        result = result.data
 
         // filter by search text
         if (state.filters.searchText) {
@@ -155,6 +162,12 @@ export default function () {
 
     const getDisplayData = async props => {
         let result = await filterData(props)
+        console.log('getdisplaydata :1', recordCount, state.filters.page)
+
+        //const maxPages = Math.ceil(recordCount / state.filters.pageSize)
+
+        if (state.filters.page > totalPages(props)) state.filters.page = totalPages(props)
+        //if (state.filters.page > maxPages) state.filters.page = maxPages
 
         if ((!props.getData && showPaginator(props)) || props.localPagination) {
             let start = (state.filters.page - 1) * state.filters.pageSize
@@ -169,7 +182,6 @@ export default function () {
             // data
             data: [],
             getData: null,
-            recordCount: null,
             columns: [],
 
             mustSort: null,
@@ -352,14 +364,23 @@ export default function () {
                                     null}
                                 `
                             )}
-                        ${
-                            getDataError &&
-                            html`<tr>
-                                <td colspan="100%" style="background: lightcoral;">
-                                    ${getDataError}
-                                </td>
-                            </tr>`
-                        }
+                            <!-- No records message -->
+                            ${
+                                (totalRecordCount(props) === 0 &&
+                                    html`<tr>
+                                        <td colspan="100%">No records found</td>
+                                    </tr>`) ||
+                                null
+                            }
+                            <!-- error message -->
+                            ${
+                                getDataError &&
+                                html`<tr>
+                                    <td colspan="100%" style="background: lightcoral;">
+                                        ${getDataError}
+                                    </td>
+                                </tr>`
+                            }
                         </tbody>
                         
                     </table>
@@ -369,17 +390,20 @@ export default function () {
                     style="display: flex; align-items: center; justify-content: center; margin-top:15px;"
                 >
                     ${
-                        props.showCounts &&
-                        html`
-                            <span style="flex-grow: 1;"
-                                >Showing ${(state.filters.page - 1) * state.filters.pageSize + 1} to
-                                ${Math.min(
-                                    state.filters.page * state.filters.pageSize,
-                                    totalRecordCount(props)
-                                )}
-                                of ${totalRecordCount(props)} entries</span
-                            >
-                        `
+                        (props.showCounts &&
+                            totalRecordCount(props) > 0 &&
+                            html`
+                                <span style="flex-grow: 1;"
+                                    >Showing
+                                    ${(state.filters.page - 1) * state.filters.pageSize + 1} to
+                                    ${Math.min(
+                                        state.filters.page * state.filters.pageSize,
+                                        totalRecordCount(props)
+                                    )}
+                                    of ${totalRecordCount(props)} entries</span
+                                >
+                            `) ||
+                        null
                     }
 
                     <!-- Add spacer if the paginator is right aligned -->

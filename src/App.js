@@ -19,7 +19,7 @@ const state = observe(
             boundaryLinks: true
         },
         page: 1,
-        recordCount: 10,
+        recordCount: null,
         columns: [
             {
                 field: 'a',
@@ -74,7 +74,6 @@ export default () => html`
     <!-- -->
     ${true &&
     ServerTable({
-        data: state.data,
         getData({ sortBy, sortDesc, page, pageSize, query }) {
             console.log('GETDATA')
             let params = {
@@ -88,15 +87,16 @@ export default () => html`
             return http
                 .get('https://jsonplaceholder.typicode.com/posts', { params })
                 .then(result => {
-                    state.recordCount = parseInt(result.headers['x-total-count'], 10)
-                    return result.data
+                    return {
+                        data: result.data,
+                        recordCount: parseInt(result.headers['x-total-count'], 10)
+                    }
                 })
             // .catch(er => {
             //     alert('Error !!!!!\n\n' + JSON.stringify(er))
             //     return [{ title: 'Error!!!' }]
             // })
         },
-        recordCount: state.recordCount,
         // localPagination: true,
         columns: [
             { field: 'id', label: 'id', sortable: true, width: '60px' },
@@ -117,7 +117,7 @@ export default () => html`
     })}
 
     <!-- -->
-    ${true &&
+    ${null &&
     DataTable({
         columns: state.columns,
         data: JSON.parse(JSON.stringify(state.data)),
