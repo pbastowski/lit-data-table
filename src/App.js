@@ -1,9 +1,6 @@
 import { html, observe, log, json } from './libs.js'
 import dataTable from './components/data-table.js'
 import http from 'axios'
-// import Test from './components/test-c.js'
-
-// console.log(Test())
 
 const ServerTable = new dataTable()
 const DataTable = new dataTable()
