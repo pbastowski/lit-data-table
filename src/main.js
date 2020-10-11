@@ -2,13 +2,10 @@ import 'font-awesome/css/font-awesome.min.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './main.css'
 
-import { render, computed } from './libs.js'
+import { mount } from './mount.js'
+
 import App from './App.js'
 
-console.clear()
+// console.clear()
 
-computed(() => {
-    console.time('± render')
-    render(App(), document.querySelector('#app'))
-    console.timeEnd('± render')
-})
+mount(App.bind(null, { a: 1, b: 2 }), '#app')

@@ -50,7 +50,7 @@ export default function () {
         { batch: true, bind: true }
     )
 
-    window.s = state
+    // window.s = state
 
     const debounceGetData = debounce(() => getDisplayData(_props), 50)
 

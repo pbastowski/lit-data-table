@@ -29,3 +29,5 @@ export const log = console.log.bind(console)
 // export { createRoutes } from './cr.js'
 
 export { LionPagination } from '@lion/pagination'
+
+export { useState, useRef, mount } from './mount.js'
