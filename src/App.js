@@ -116,7 +116,7 @@ export default props => {
         })}
 
         <!-- -->
-        ${null &&
+    ${true &&
         DataTable({
             columns: state.columns,
             data: JSON.parse(JSON.stringify(state.data)),
