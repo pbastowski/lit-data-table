@@ -118,7 +118,7 @@ export default () => html`
     })}
 
     <!-- -->
-    ${null &&
+    ${true &&
     DataTable({
         columns: state.columns,
         data: JSON.parse(JSON.stringify(state.data)),
