@@ -130,7 +130,7 @@ export default function () {
                       getDataError = er
                       return []
                   })
-            : props.data.slice()
+            : { data: props.data.slice(), recordCount: props.data.length }
 
         recordCount = result.recordCount
         result = result.data
