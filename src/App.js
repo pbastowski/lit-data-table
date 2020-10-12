@@ -75,7 +75,7 @@ export default virtual(props => {
         ${true &&
         DataTable({
             getData({ sortBy, sortDesc, page, pageSize, query }) {
-                console.log('GETDATA')
+                console.log('GETDATA:', sortBy, sortDesc, page, pageSize, query)
                 let params = {
                     _sort: sortDesc != null ? sortBy : undefined,
                     _order: sortDesc != null ? (sortDesc ? 'desc' : 'asc') : undefined,

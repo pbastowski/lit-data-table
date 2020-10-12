@@ -81,6 +81,7 @@ export default virtual((props = {}) => {
     // Fetch data when the filters get updated
     useEffect(() => {
         // debounceGetData()
+        if (filters.page === null) return
         getDisplayData(props)
     }, [filters])
 
@@ -160,18 +161,10 @@ export default virtual((props = {}) => {
         setGetDataError(null)
 
         let result = props.getData
-            ? await props
-                  .getData({
-                      sortBy: filters.sortBy,
-                      sortDesc: filters.sortDesc,
-                      page: filters.page,
-                      pageSize: filters.pageSize,
-                      query: filters.searchText
-                  })
-                  .catch(er => {
-                      setGetDataError(er)
-                      return []
-                  })
+            ? await props.getData(filters).catch(er => {
+                  setGetDataError(er)
+                  return []
+              })
             : { data: props.data.slice(), recordCount: props.data.length }
 
         setRecordCount(result.recordCount)
@@ -203,9 +196,11 @@ export default virtual((props = {}) => {
     const getDisplayData = async props => {
         let result = await filterData(props)
 
+        // prevent page being > totalPages
         const tp = totalPages(props)
         if (filters.page > tp && tp > 0) setFilters({ ...filters, page: tp })
 
+        // Do local pagination
         if ((!props.getData && showPaginator(props)) || props.localPagination) {
             let start = (filters.page - 1) * filters.pageSize
             result = result.slice(start, start + filters.pageSize)
