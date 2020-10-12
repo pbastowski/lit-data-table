@@ -147,6 +147,9 @@ export default props => {
             // changePage: page => (state.page = page),
             // changePageSize: pageSize => (state.pageSize = pageSize)
         })}
+
+        <hr />
+        ${Test3({ these: 1, are: 2, props: 3 })}
     `
 }
 
@@ -163,4 +166,13 @@ function slotExpand(row) {
 
 function slotItem(item, col, row) {
     return item //html`${item}`
+}
+
+function Test3(props) {
+    const state = useState({ name: 'John', surname: 'Citizen' })
+
+    return html`
+        <h3>Test 3</h3>
+        <pre>${json(state)}</pre>
+    `
 }
