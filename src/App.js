@@ -53,7 +53,8 @@ const state = observe(
             { a: 9, b: 'lalagb la', c: 42 },
             { a: 10, b: 'lasdgdf lala', c: 742 },
             { a: 11, b: 'lala7978 la', c: 6 }
-        ]
+        ],
+        showTable2: true
     },
     { batch: true }
 )
@@ -115,7 +116,12 @@ export default () => html`
     })}
 
     <!-- -->
-    ${true &&
+    <button
+        @click=${() => (state.showTable2 ? (state.showTable2 = null) : (state.showTable2 = true))}
+    >
+        Click
+    </button>
+    ${state.showTable2 &&
     DataTable({
         columns: state.columns,
         data: JSON.parse(JSON.stringify(state.data)),
