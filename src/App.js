@@ -1,9 +1,10 @@
-import { html, observe, log, json } from './libs.js'
+// import { html, observe, log, json } from './libs.js'
+import { html, virtual, useState, json } from './libs.js'
 import DataTable from './components/data-table2.js'
 import http from 'axios'
 
 // import { useState } from './libs.js'
-import { useState, useRef, mount } from './mount.js'
+// import { html, virtual } from 'haunted'
 
 const config = {
     pageSize: 5,
@@ -55,15 +56,18 @@ const config = {
     showTable2: true
 }
 
-export default props => {
-    const state = useState(config, { ignore: ['data'] })
+export default virtual(props => {
+    const [state, setState] = useState(config)
+
     return html`
         <h1>Data Table</h1>
 
-        <!--<h3 b1>
+        <!--
+        <h3 b1>
         The table below fetches data directly from
         <small><code>jsonplaceholder.typicode.com/posts</code></small>
-    </h3>-->
+        </h3>
+        -->
 
         <br />
 
@@ -116,7 +120,9 @@ export default props => {
         <!-- -->
         <button
             @click=${() =>
-                state.showTable2 ? (state.showTable2 = null) : (state.showTable2 = true)}
+                state.showTable2
+                    ? setState({ ...state, showTable2: null })
+                    : setState({ ...state, showTable2: true })}
         >
             Click
         </button>
@@ -151,7 +157,7 @@ export default props => {
         <hr />
         ${Test3({ these: 1, are: 2, props: 3 })}
     `
-}
+})
 
 function slotExpand(row) {
     return html`
@@ -169,10 +175,10 @@ function slotItem(item, col, row) {
 }
 
 function Test3(props) {
-    const state = useState({ name: 'John', surname: 'Citizen' })
+    const [state, setState] = useState({ name: 'John', surname: 'Citizen' })
 
     return html`
         <h3>Test 3</h3>
-        <pre>${json(state)}</pre>
+        <pre>state: ${json(state)}</pre>
     `
 }
