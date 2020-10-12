@@ -1,12 +1,9 @@
 import { html, observe, log, json } from './libs.js'
-import dataTable from './components/data-table.js'
+import DataTable from './components/data-table2.js'
 import http from 'axios'
 
 // import { useState } from './libs.js'
 import { useState, useRef, mount } from './mount.js'
-
-const ServerTable = new dataTable()
-const DataTable = new dataTable()
 
 const config = {
     pageSize: 5,
@@ -54,11 +51,12 @@ const config = {
         { a: 9, b: 'lalagb la', c: 42 },
         { a: 10, b: 'lasdgdf lala', c: 742 },
         { a: 11, b: 'lala7978 la', c: 6 }
-    ]
+    ],
+    showTable2: true
 }
 
 export default props => {
-    const state = useState(config)
+    const state = useState(config, { ignore: ['data'] })
     return html`
         <h1>Data Table</h1>
 
@@ -71,7 +69,7 @@ export default props => {
 
         <!-- -->
         ${true &&
-        ServerTable({
+        DataTable({
             getData({ sortBy, sortDesc, page, pageSize, query }) {
                 console.log('GETDATA')
                 let params = {
@@ -116,7 +114,13 @@ export default props => {
         })}
 
         <!-- -->
-        ${true &&
+        <button
+            @click=${() =>
+                state.showTable2 ? (state.showTable2 = null) : (state.showTable2 = true)}
+        >
+            Click
+        </button>
+        ${state.showTable2 &&
         DataTable({
             columns: state.columns,
             data: JSON.parse(JSON.stringify(state.data)),
