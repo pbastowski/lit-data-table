@@ -1,9 +1,5 @@
 import DataTable from './components/data-table2.js'
-
-const state = {
-    pageSize: 5,
-    page: 1
-}
+import { observe, html } from './libs.js'
 
 const data = [
     { a: 1, b: 'lalala', c: 9 },
@@ -44,6 +40,11 @@ const columns = [
     }
 ]
 
-window.showTable = true
+const state = observe({
+    showTable: true
+})
 
-export default props => window.showTable && DataTable({ columns, data })
+export default props => html`
+    <button @click=${() => (state.showTable = state.showTable ? null : true)}>Hide/Show</button>
+    ${state.showTable && DataTable({ columns, data })}
+`
