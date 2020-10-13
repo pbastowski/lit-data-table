@@ -9,3 +9,12 @@ import App from './App.js'
 computed(() => {
     render(App(), document.querySelector('#app'))
 })
+
+window.runtest = () => {
+    let c = 1
+    const f = () => {
+        document.querySelector('#testit').click()
+        c++ < 100 && setTimeout(f, 60)
+    }
+    f()
+}

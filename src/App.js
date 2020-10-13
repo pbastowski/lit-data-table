@@ -45,6 +45,8 @@ const state = observe({
 })
 
 export default props => html`
-    <button @click=${() => (state.showTable = state.showTable ? null : true)}>Hide/Show</button>
+    <button id="testit" @click=${() => (state.showTable = state.showTable ? null : true)}>
+        Hide/Show
+    </button>
     ${state.showTable && DataTable({ columns, data })}
 `
