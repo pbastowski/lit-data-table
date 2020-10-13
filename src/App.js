@@ -54,7 +54,7 @@ const state = observe(
             { a: 10, b: 'lasdgdf lala', c: 742 },
             { a: 11, b: 'lala7978 la', c: 6 }
         ],
-        showTable2: true
+        showTable2: null
     },
     { batch: true }
 )
