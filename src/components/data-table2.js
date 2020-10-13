@@ -1,6 +1,7 @@
-import { html, classMap, LionPagination } from '../libs.js'
+// import { html, classMap, LionPagination } from '../libs.js'
+import { html, classMap } from '../libs.js'
 
-customElements.define('lion-pagination', LionPagination)
+// customElements.define('lion-pagination', LionPagination)
 
 const styles = html`<style>
     .data-table ul.pagination {
