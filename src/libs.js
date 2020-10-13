@@ -9,21 +9,7 @@ export const { observe, computed, dispose } = hyperactiv
 // lit-html has lots of useful methods, of which we only want a subset.
 // The most useful to us are listed below.
 // export { render, html, EventPart, directive, nothing } from 'lit-html'
-export { EventPart, directive, nothing } from 'lit-html'
-export {
-    render,
-    html,
-    component,
-    virtual,
-    useState,
-    useMemo,
-    useCallback,
-    useEffect,
-    useLayoutEffect,
-    useReducer,
-    useRef,
-    useContext
-} from 'haunted'
+export { html, render, EventPart, directive, nothing } from 'lit-html'
 
 // export { render, EventPart, directive, nothing } from 'https://unpkg.com/lit-html'
 // export { LitElement, html } from 'https://unpkg.com/lit-element?module'

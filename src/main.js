@@ -6,4 +6,13 @@ import { render } from 'haunted'
 
 import App from './App.js'
 
-render(App(), document.querySelector('#app'))
+document.querySelector('#click').addEventListener('click', () => {
+    window.showTable = window.showTable ? null : true
+    reRender()
+})
+
+function reRender() {
+    render(App(), document.querySelector('#app'))
+}
+
+reRender()

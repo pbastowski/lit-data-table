@@ -1,5 +1,4 @@
-import debounce from 'lodash/debounce'
-import { virtual, html, classMap, log, json, LionPagination, useState, useEffect } from '../libs.js'
+import { html, classMap, LionPagination } from '../libs.js'
 
 customElements.define('lion-pagination', LionPagination)
 
@@ -23,7 +22,7 @@ const styles = html`<style>
     }
 </style>`
 
-export default virtual(({ data = [], columns = [] }) => {
+export default ({ data = [], columns = [] }) => {
     const headerClasses = col =>
         classMap({
             'text-center': col.align === 'center',
@@ -86,4 +85,4 @@ export default virtual(({ data = [], columns = [] }) => {
 
     // console.timeEnd('± table')
     return template
-})
+}
