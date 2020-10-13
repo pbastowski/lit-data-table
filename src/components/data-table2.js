@@ -76,11 +76,8 @@ export default virtual((props = {}) => {
 
     const [expanded, setExpanded] = useState([])
 
-    // const debounceGetData = debounce(() => getDisplayData(props), 50)
-
     // Fetch data when the filters get updated
     useEffect(() => {
-        // debounceGetData()
         if (filters.page === null) return
         getDisplayData(props)
     }, [filters])

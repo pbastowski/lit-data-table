@@ -53,7 +53,7 @@ const config = {
         { a: 10, b: 'lasdgdf lala', c: 742 },
         { a: 11, b: 'lala7978 la', c: 6 }
     ],
-    showTable2: true
+    showTable2: null
 }
 
 export default virtual(props => {
@@ -74,14 +74,14 @@ export default virtual(props => {
         <!-- -->
         ${true &&
         DataTable({
-            getData({ sortBy, sortDesc, page, pageSize, query }) {
-                console.log('GETDATA:', sortBy, sortDesc, page, pageSize, query)
+            getData({ sortBy, sortDesc, page, pageSize, searchText }) {
+                // console.log('GETDATA:', sortBy, sortDesc, page, pageSize, searchText)
                 let params = {
                     _sort: sortDesc != null ? sortBy : undefined,
                     _order: sortDesc != null ? (sortDesc ? 'desc' : 'asc') : undefined,
                     _page: page,
                     _limit: pageSize,
-                    q: query
+                    q: searchText
                 }
 
                 return http
@@ -153,9 +153,6 @@ export default virtual(props => {
             // changePage: page => (state.page = page),
             // changePageSize: pageSize => (state.pageSize = pageSize)
         })}
-
-        <hr />
-        ${Test3({ these: 1, are: 2, props: 3 })}
     `
 })
 
@@ -172,13 +169,4 @@ function slotExpand(row) {
 
 function slotItem(item, col, row) {
     return item //html`${item}`
-}
-
-function Test3(props) {
-    const [state, setState] = useState({ name: 'John', surname: 'Citizen' })
-
-    return html`
-        <h3>Test 3</h3>
-        <pre>state: ${json(state)}</pre>
-    `
 }
