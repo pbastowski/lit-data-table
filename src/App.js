@@ -1,22 +1,16 @@
-// import { html, observe, log, json } from './libs.js'
 import { html, virtual, useState, json } from './libs.js'
 import DataTable from './components/data-table2.js'
 import http from 'axios'
 
-// import { useState } from './libs.js'
-// import { html, virtual } from 'haunted'
-
-const config = {
+const state = {
     pageSize: 5,
-    paginator: {
-        maxSize: 5,
-        align: 'center',
-        size: 'md',
-        boundaryLinks: true
-    },
-    page: 1,
-    recordCount: null,
-    columns: [
+    page: 1
+}
+
+export default virtual(props => {
+    const [showTable, setShowTable] = useState(true)
+
+    const [columns, setColumns] = useState([
         {
             field: 'a',
             label: 'AAA',
@@ -39,8 +33,9 @@ const config = {
             align: 'right',
             sortable: true
         }
-    ],
-    data: [
+    ])
+
+    const [data, setData] = useState([
         { a: 1, b: 'lalala', c: 9 },
         { a: 2, b: 'lazcv lala', c: 42 },
         { a: 3, b: 'lalasfxala', c: 1 },
@@ -52,121 +47,17 @@ const config = {
         { a: 9, b: 'lalagb la', c: 42 },
         { a: 10, b: 'lasdgdf lala', c: 742 },
         { a: 11, b: 'lala7978 la', c: 6 }
-    ],
-    showTable2: null
-}
-
-export default virtual(props => {
-    const [state, setState] = useState(config)
+    ])
 
     return html`
-        <h1>Data Table</h1>
-
-        <!--
-        <h3 b1>
-        The table below fetches data directly from
-        <small><code>jsonplaceholder.typicode.com/posts</code></small>
-        </h3>
-        -->
+        <h1>Data Table Memory Usage Test</h1>
 
         <br />
 
-        <!-- -->
-        ${true &&
-        DataTable({
-            getData({ sortBy, sortDesc, page, pageSize, searchText }) {
-                // console.log('GETDATA:', sortBy, sortDesc, page, pageSize, searchText)
-                let params = {
-                    _sort: sortDesc != null ? sortBy : undefined,
-                    _order: sortDesc != null ? (sortDesc ? 'desc' : 'asc') : undefined,
-                    _page: page,
-                    _limit: pageSize,
-                    q: searchText
-                }
-
-                return http
-                    .get('https://jsonplaceholder.typicode.com/posts', { params })
-                    .then(result => {
-                        return {
-                            data: result.data,
-                            recordCount: parseInt(result.headers['x-total-count'], 10)
-                        }
-                    })
-                // .catch(er => {
-                //     alert('Error !!!!!\n\n' + JSON.stringify(er))
-                //     return [{ title: 'Error!!!' }]
-                // })
-            },
-            // localPagination: true,
-            columns: [
-                { field: 'id', label: 'id', sortable: true, width: '60px' },
-                { field: 'title', label: 'Title', sortable: true, align: 'center' }
-            ],
-            page: state.page,
-            paginator: state.paginator,
-            sortBy: 'title',
-            // sortDesc: false,
-            mustSort: true,
-            pageSizeSelector: true,
-            searchable: true,
-            expandable: true,
-
-            slotExpand,
-            slotItem
-            // changePage: page => (state.page = page),
-            // changePageSize: pageSize => (state.pageSize = pageSize)
-        })}
-
-        <!-- -->
-        <button
-            @click=${() =>
-                state.showTable2
-                    ? setState({ ...state, showTable2: null })
-                    : setState({ ...state, showTable2: true })}
-        >
-            Click
+        <button @click="${() => (showTable ? setShowTable(null) : setShowTable(true))}">
+            ${showTable ? 'Hide' : 'Show'}
         </button>
-        ${state.showTable2 &&
-        DataTable({
-            columns: state.columns,
-            data: JSON.parse(JSON.stringify(state.data)),
-            // getData: ({ page, pageSize }) => {
-            //     // console.log('GET DATA:')
-            //     return Promise.resolve(state.data)
-            //     return Promise.resolve(state.data.slice((page - 1) * pageSize, page * pageSize))
-            // },
-            // recordCount: 11,
 
-            page: 1, //state.page,
-            // pageSize: state.pageSize,
-            sortBy: 'b',
-            sortDesc: false,
-            mustSort: true,
-
-            paginator: true,
-            localPagination: true,
-            pageSizeSelector: true,
-            searchable: true,
-            expandable: true,
-
-            slotExpand
-            // changePage: page => (state.page = page),
-            // changePageSize: pageSize => (state.pageSize = pageSize)
-        })}
+        ${showTable && DataTable({ columns, data })}
     `
 })
-
-function slotExpand(row) {
-    return html`
-        <tr style="background: lightyellow;">
-            <td colspan="100%">
-                Expanded
-                <p>${json(row)}</p>
-            </td>
-        </tr>
-    `
-}
-
-function slotItem(item, col, row) {
-    return item //html`${item}`
-}
