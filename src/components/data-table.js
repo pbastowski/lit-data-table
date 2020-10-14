@@ -1,6 +1,6 @@
 import debounce from 'lodash/debounce'
-import { html, observe, classMap, log, json, LionPagination } from '../libs.js'
-import bind from '../bind.js'
+import { virtual, html, classMap, log, json, LionPagination, useState, useEffect } from '../libs.js'
+// import bind from '../bind.js'
 
 customElements.define('lion-pagination', LionPagination)
 
@@ -24,59 +24,92 @@ const styles = html`<style>
     }
 </style>`
 
-export default function () {
-    let created = false
-    let _props
-    let filteredData = []
-    let recordCount = 0
+export default virtual((props = {}) => {
+    props = {
+        // data
+        data: [],
+        getData: null,
+        columns: [],
 
-    const state = observe(
-        {
-            filters: {
-                page: null,
-                pageSize: null,
-                sortBy: null,
-                sortDesc: null,
-                searchText: '',
+        mustSort: null,
+        sortBy: null,
+        sortDesc: null,
+        searchText: '',
 
-                __handler(key, nv, ov, obj) {
-                    // console.log('FILTERS', key, nv, ov)
-                    debounceGetData()
-                }
-            },
+        // paging, sorting and searching
+        page: 1,
+        pageSize: 5,
+        changePageSize: () => {},
+        changePage: () => {},
+        paginator: {},
+        pageSizeSelector: props.pageSizeSelector || null,
+        localPagination: false,
 
-            displayData: []
-        },
-        { batch: true, bind: true }
-    )
+        searchable: props.searchable || null,
 
-    // window.s = state
+        // display record stats
+        showCounts: true,
 
-    const debounceGetData = debounce(() => getDisplayData(_props), 50)
+        // slots
+        slot: null,
+        slotItem: null,
+        slotHeaderCell: null,
+        slotProgressBar: null,
+        slotTopRight: null,
+        slotPaginator: null,
+        slotExpand: null,
+        ...props
+    }
+
+    const [displayData, setDisplayData] = useState([])
+    let [recordCount, setRecordCount] = useState(0)
+    const [getDataError, setGetDataError] = useState(null)
+
+    const [filters, setFilters] = useState({
+        page: props.page,
+        pageSize: props.pageSize,
+        sortBy: props.sortBy,
+        sortDesc: props.sortDesc,
+        searchText: props.searchText || ''
+    })
+
+    // Fetch data when the filters get updated
+    useEffect(() => {
+        getDisplayData(props)
+    }, [filters])
+
+    // useEffect(() => console.log('=== recordCount:', recordCount), [recordCount])
+    // useEffect(() => console.log('=== displayData:', recordCount, displayData), [displayData])
 
     const debounceSearch = debounce(function (ev) {
-        state.filters.searchText = ev.target.value
+        setFilters({ ...filters, searchText: ev.target.value })
     }, 400)
 
-    const expandedRows = new WeakMap()
-
-    const toggleExpanded = (row, props) => {
-        if (!props.expandable) return
+    const toggleExpanded = row => {
+        // Add a non-iterable prop $$expanded to the row object
         if (!row.hasOwnProperty('$$expanded'))
             Object.defineProperty(row, '$$expanded', { enumerable: false, writable: true })
+
+        // toggle its value
         row.$$expanded = !row.$$expanded
+
+        // The update below works because the row is passed by reference
+        // and thus is already in the displayData array
+        setDisplayData(displayData)
     }
 
     const sort = (col, props) => {
-        if (props.mustSort)
-            state.filters.sortDesc =
-                state.filters.sortBy === col.field ? !state.filters.sortDesc : false
-        else if (state.filters.sortBy !== col.field) state.filters.sortDesc = false
-        else if (state.filters.sortDesc == null) state.filters.sortDesc = false
-        else if (state.filters.sortDesc) state.filters.sortDesc = null
-        else state.filters.sortDesc = true
+        let sortBy, sortDesc
 
-        state.filters.sortBy = col.field
+        if (props.mustSort) sortDesc = filters.sortBy === col.field ? !filters.sortDesc : false
+        else if (filters.sortBy !== col.field) sortDesc = false
+        else if (filters.sortDesc == null) sortDesc = false
+        else if (filters.sortDesc) sortDesc = null
+        else sortDesc = true
+
+        sortBy = col.field
+
+        setFilters({ ...filters, sortBy, sortDesc })
     }
 
     const headerClasses = col =>
@@ -88,15 +121,6 @@ export default function () {
             [col.headerClass]: true
         })
 
-    const totalPages = props => {
-        //console.log()
-        return Math.ceil(totalRecordCount(props) / state.filters.pageSize)
-    }
-
-    const filteredRecordCount = props => {
-        return state.displayData.length
-    }
-
     const itemClasses = col =>
         classMap({
             'text-center': col.align === 'center',
@@ -106,127 +130,73 @@ export default function () {
 
     const showPaginator = props => props.paginator //&& typeof props.paginator === 'object'
 
-    const totalRecordCount = props => {
-        // console.log('recordCount', recordCount)
-        return props.getData ? recordCount : filteredData.length
-    }
+    // Get the data to display, either from getData or in the passed data prop
+    const filterData = props => {
+        setGetDataError(null)
 
-    let getDataError = null
-    const filterData = async props => {
-        // Get the data to display, either from the backend
-        // or in the passed data prop.
-        getDataError = null
-
-        let result = props.getData
-            ? await props
-                  .getData({
-                      sortBy: state.filters.sortBy,
-                      sortDesc: state.filters.sortDesc,
-                      page: state.filters.page,
-                      pageSize: state.filters.pageSize,
-                      query: state.filters.searchText
+        return new Promise(async (resolve, reject) => {
+            let result = props.getData
+                ? await props.getData(filters).catch(er => {
+                      setGetDataError(er)
+                      return reject()
+                      return reject({ data: [], recordCount: 0 })
                   })
-                  .catch(er => {
-                      getDataError = er
-                      return []
-                  })
-            : { data: props.data.slice(), recordCount: props.data.length }
+                : { data: props.data.slice(), recordCount: props.data.length }
 
-        recordCount = result.recordCount
-        result = result.data
-
-        // filter by search text
-        if (state.filters.searchText) {
-            let search = state.filters.searchText.toLowerCase()
-            result = result.filter(row =>
-                Object.values(row).some(col => (col + '').toLowerCase().includes(search))
-            )
-        }
-
-        // local sorting
-        {
-            let key = state.filters.sortBy
-            if (key && state.filters.sortDesc != null) {
-                let sgn = state.filters.sortDesc ? -1 : 1
-                result.sort((a, b) => {
-                    return a[key] === b[key] ? 0 : a[key] > b[key] ? sgn : -sgn
-                })
+            // Filter by search text
+            // Note that this may already have been done by the getData function.
+            // todo: consider providing a "localSearch" prop to control this behaviour
+            if (filters.searchText) {
+                let search = filters.searchText.toLowerCase()
+                result.data = result.data.filter(row =>
+                    Object.values(row).some(col => (col + '').toLowerCase().includes(search))
+                )
+                // Update the recordCount if data is coming from props.data
+                if (!props.getData) result.recordCount = result.data.length
             }
-        }
 
-        filteredData = result
-        return result
+            // local sorting
+            // todo: consider providing a "localSort" prop to control this behaviour
+            {
+                let key = filters.sortBy
+                if (key && filters.sortDesc != null) {
+                    let sgn = filters.sortDesc ? -1 : 1
+                    result.data.sort((a, b) => {
+                        return a[key] === b[key] ? 0 : a[key] > b[key] ? sgn : -sgn
+                    })
+                }
+            }
+
+            return resolve(result)
+        })
     }
 
     const getDisplayData = async props => {
         let result = await filterData(props)
+        // console.log('>> getDisplayData:', result)
 
-        const tp = totalPages(props)
-        if (state.filters.page > tp && tp > 0) state.filters.page = tp
+        recordCount = result.recordCount // setRecordCount won't work here, because it's batched
 
+        // prevent page being > totalPages
+        const totalPages = Math.ceil(recordCount / filters.pageSize)
+        if (filters.page > totalPages && totalPages > 0)
+            setFilters({ ...filters, page: totalPages })
+
+        // Do local pagination
         if ((!props.getData && showPaginator(props)) || props.localPagination) {
-            let start = (state.filters.page - 1) * state.filters.pageSize
-            result = result.slice(start, start + state.filters.pageSize)
+            let start = (filters.page - 1) * filters.pageSize
+            result.data = result.data.slice(start, start + filters.pageSize)
         }
 
-        state.displayData = result
+        // trigger render
+        setRecordCount(recordCount)
+        setDisplayData(result.data)
     }
 
-    return (props = {}) => {
-        props = {
-            // data
-            data: [],
-            getData: null,
-            columns: [],
-
-            mustSort: null,
-            sortBy: null,
-            sortDesc: null,
-            searchText: '',
-
-            // paging, sorting and searching
-            page: 1,
-            pageSize: 5,
-            changePageSize: () => {},
-            changePage: () => {},
-            paginator: {},
-            pageSizeSelector: props.pageSizeSelector || null,
-            localPagination: false,
-
-            searchable: props.searchable || null,
-
-            // display record stats
-            showCounts: true,
-
-            // slots
-            slot: null,
-            slotItem: null,
-            slotHeaderCell: null,
-            slotProgressBar: null,
-            slotTopRight: null,
-            slotPaginator: null,
-            slotExpand: null,
-            ...props
-        }
-
-        _props = props // we need access to props in constructor functions
-
-        if (!created) {
-            created = true
-            state.filters.page = totalPages(props) < props.page ? totalPages(props) : props.page
-            state.filters.pageSize = props.pageSize
-
-            state.filters.sortBy = props.sortBy
-            state.filters.sortDesc = props.sortDesc
-
-            state.filters.searchText = props.searchText
-
-            // console.log('CREATED-HOOK')
-        }
-
-        // console.time('± table')
-        const template = html`
+    // console.time('± table')
+    const template = html`
             ${styles}
+            <pre>recordCount: ${recordCount}</pre>
             <div class="data-table">
                 ${props.slot && props.slot()}
                 <div style="display: flex; align-items: end; justify-content: flex-end;">
@@ -240,16 +210,19 @@ export default function () {
                                 <select
                                     style="max-width: 100px;"
                                     class="form-control mx-2"
-                                    .value=${state.filters.pageSize}
+                                    .value=${filters.pageSize}
                                     @change=${e => {
-                                        state.filters.pageSize = Number(e.target.value)
+                                        setFilters({
+                                            ...filters,
+                                            pageSize: Number(e.target.value)
+                                        })
                                     }}
                                 >
                                     ${[5, 10, 25, 50, 100].map(
                                         size =>
                                             html` <option
                                                 .value=${size}
-                                                ?selected=${size === state.filters.pageSize}
+                                                ?selected=${size === filters.pageSize}
                                             >
                                                 ${size}
                                             </option>`
@@ -274,7 +247,7 @@ export default function () {
                                     style="position: absolute; right: 1rem; color: silver; top: 10px;"
                                 ></i>
                                 <input
-                                    .value=${state.filters.searchText}
+                                    .value=${filters.searchText}
                                     @input=${debounceSearch}
                                     type="text"
                                     placeholder="Search..."
@@ -310,11 +283,11 @@ export default function () {
                                                 </span>
 
                                                 ${(col.sortable &&
-                                                    state.filters.sortDesc != null &&
-                                                    state.filters.sortBy === col.field &&
+                                                    filters.sortDesc != null &&
+                                                    filters.sortBy === col.field &&
                                                     html`
                                                         <span style="margin-left: 6px;">
-                                                            ${(state.filters.sortDesc === true &&
+                                                            ${(filters.sortDesc === true &&
                                                                 html`
                                                                     <i
                                                                         class="fa fa-sort-down"
@@ -322,7 +295,7 @@ export default function () {
                                                                     ></i>
                                                                 `) ||
                                                             null}
-                                                            ${(state.filters.sortDesc === false &&
+                                                            ${(filters.sortDesc === false &&
                                                                 html` <i
                                                                     class="fa fa-sort-up"
                                                                     key="up"
@@ -343,7 +316,7 @@ export default function () {
 
                         <tbody>
                             <!-- data rows -->
-                            ${state.displayData.map(
+                            ${displayData.map(
                                 (row, index) => html`
                                     <tr @click=${() => toggleExpanded(row, props)}>
                                         ${props.columns.map(
@@ -366,7 +339,7 @@ export default function () {
                             
                             <!-- No records message -->
                             ${
-                                (totalRecordCount(props) === 0 &&
+                                (recordCount === 0 &&
                                     html`<tr>
                                         <td colspan="100%">No records found</td>
                                     </tr>`) ||
@@ -392,16 +365,12 @@ export default function () {
                 >
                     ${
                         (props.showCounts &&
-                            totalRecordCount(props) > 0 &&
+                            recordCount > 0 &&
                             html`
                                 <span style="flex-grow: 1;"
-                                    >Showing
-                                    ${(state.filters.page - 1) * state.filters.pageSize + 1} to
-                                    ${Math.min(
-                                        state.filters.page * state.filters.pageSize,
-                                        totalRecordCount(props)
-                                    )}
-                                    of ${totalRecordCount(props)} records</span
+                                    >Showing ${(filters.page - 1) * filters.pageSize + 1} to
+                                    ${Math.min(filters.page * filters.pageSize, recordCount)} of
+                                    ${recordCount} records</span
                                 >
                             `) ||
                         null
@@ -409,33 +378,35 @@ export default function () {
 
                     <!-- Add spacer if the paginator is right aligned -->
                     ${
-                        (props.paginator.align === 'right' &&
-                            html`<span style="flex-grow: 1;" />`) ||
-                        null
+                        props.paginator.align === 'right'
+                            ? html`<span style="flex-grow: 1;" />`
+                            : null
                     }
 
                     <!-- Optionally display the paginator  -->
                     ${
                         (showPaginator(props) &&
-                            totalRecordCount(props) &&
-                            state.filters.pageSize &&
+                            recordCount &&
+                            filters.pageSize &&
                             html`
                                 <lion-pagination
                                     id="abc"
-                                    .count=${Math.ceil(
-                                        totalRecordCount(props) / state.filters.pageSize
-                                    )}
-                                    .current=${state.filters.page}
-                                    @current-changed=${e => (state.filters.page = e.target.current)}
+                                    .count=${Math.ceil(recordCount / filters.pageSize)}
+                                    .current=${filters.page}
+                                    @current-changed=${e =>
+                                        setFilters({
+                                            ...filters,
+                                            page: e.target.current
+                                        })}
                                     Xcurrent-changed="${e => props.changePage(e.target.current)}}"
                                 ></lion-pagination>
                             `) ||
                         null
                     }
                     ${
-                        (props.paginator.align === 'left' &&
-                            html`<span style="flex-grow: 1;" />`) ||
-                        null
+                        props.paginator.align === 'left'
+                            ? html`<span style="flex-grow: 1;" />`
+                            : null
                     }
                 </div>
 
@@ -443,7 +414,6 @@ export default function () {
             </div>
         `
 
-        // console.timeEnd('± table')
-        return template
-    }
-}
+    // console.timeEnd('± table')
+    return template
+})

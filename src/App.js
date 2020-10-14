@@ -1,6 +1,6 @@
 // import { html, observe, log, json } from './libs.js'
 import { html, virtual, useState, json } from './libs.js'
-import DataTable from './components/data-table2.js'
+import DataTable from './components/data-table.js'
 import http from 'axios'
 
 // import { useState } from './libs.js'
