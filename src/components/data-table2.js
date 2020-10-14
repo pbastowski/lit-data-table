@@ -74,8 +74,6 @@ export default virtual((props = {}) => {
         searchText: ''
     })
 
-    const [expanded, setExpanded] = useState([])
-
     // Fetch data when the filters get updated
     useEffect(() => {
         if (filters.page === null) return
@@ -100,10 +98,11 @@ export default virtual((props = {}) => {
     }, 400)
 
     const toggleExpanded = (row, props) => {
-        if (!props.expandable) return
-        const found = expanded.findIndex(v => v === row)
-        if (found > -1) setExpanded(expanded.splice(found, 1))
-        else expanded.push(row)
+        if (!row.hasOwnProperty('$$expanded'))
+            Object.defineProperty(row, '$$expanded', { enumerable: false, writable: true })
+        row.$$expanded = !row.$$expanded
+
+        setDisplayData(displayData)
     }
 
     const sort = (col, props) => {
