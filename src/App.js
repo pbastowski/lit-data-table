@@ -119,6 +119,7 @@ export default virtual(props => {
 
         <!-- -->
         <button
+            id="testit"
             @click=${() =>
                 state.showTable2
                     ? setState({ ...state, showTable2: null })
