@@ -196,7 +196,6 @@ export default virtual((props = {}) => {
     // console.time('± table')
     const template = html`
             ${styles}
-            <pre>recordCount: ${recordCount}</pre>
             <div class="data-table">
                 ${props.slot && props.slot()}
                 <div style="display: flex; align-items: end; justify-content: flex-end;">
