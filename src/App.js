@@ -50,11 +50,7 @@ export default virtual(props => {
     ])
 
     return html`
-        <h1>Data Table Memory Usage Test</h1>
-
-        <br />
-
-        <button @click="${() => (showTable ? setShowTable(null) : setShowTable(true))}">
+        <button id="testit" @click="${() => (showTable ? setShowTable(null) : setShowTable(true))}">
             ${showTable ? 'Hide' : 'Show'}
         </button>
 
