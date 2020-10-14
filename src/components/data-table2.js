@@ -62,46 +62,39 @@ export default virtual((props = {}) => {
     }
 
     const [displayData, setDisplayData] = useState([])
-    const [filteredData, setFilteredData] = useState([])
-    const [recordCount, setRecordCount] = useState(0)
+    let [recordCount, setRecordCount] = useState(0)
     const [getDataError, setGetDataError] = useState(null)
 
     const [filters, setFilters] = useState({
-        page: null,
-        pageSize: null,
-        sortBy: null,
-        sortDesc: null,
-        searchText: ''
+        page: props.page,
+        pageSize: props.pageSize,
+        sortBy: props.sortBy,
+        sortDesc: props.sortDesc,
+        searchText: props.searchText || ''
     })
 
     // Fetch data when the filters get updated
     useEffect(() => {
-        if (filters.page === null) return
         getDisplayData(props)
     }, [filters])
 
-    // CREATED hook
-    useEffect(() => {
-        setFilters({
-            page: totalPages(props) < props.page ? totalPages(props) : props.page,
-            pageSize: props.pageSize,
-
-            sortBy: props.sortBy,
-            sortDesc: props.sortDesc,
-
-            searchText: props.searchText
-        })
-    }, [])
+    // useEffect(() => console.log('=== recordCount:', recordCount), [recordCount])
+    // useEffect(() => console.log('=== displayData:', recordCount, displayData), [displayData])
 
     const debounceSearch = debounce(function (ev) {
         setFilters({ ...filters, searchText: ev.target.value })
     }, 400)
 
-    const toggleExpanded = (row, props) => {
+    const toggleExpanded = row => {
+        // Add a non-iterable prop $$expanded to the row object
         if (!row.hasOwnProperty('$$expanded'))
             Object.defineProperty(row, '$$expanded', { enumerable: false, writable: true })
+
+        // toggle its value
         row.$$expanded = !row.$$expanded
 
+        // The update below works because the row is passed by reference
+        // and thus is already in the displayData array
         setDisplayData(displayData)
     }
 
@@ -128,15 +121,6 @@ export default virtual((props = {}) => {
             [col.headerClass]: true
         })
 
-    const totalPages = props => {
-        //console.log()
-        return Math.ceil(totalRecordCount(props) / filters.pageSize)
-    }
-
-    const filteredRecordCount = props => {
-        return displayData.length
-    }
-
     const itemClasses = col =>
         classMap({
             'text-center': col.align === 'center',
@@ -146,68 +130,73 @@ export default virtual((props = {}) => {
 
     const showPaginator = props => props.paginator //&& typeof props.paginator === 'object'
 
-    const totalRecordCount = props => {
-        // console.log('recordCount', recordCount)
-        return props.getData ? recordCount : filteredData.length
-    }
-
-    const filterData = async props => {
-        // Get the data to display, either from the backend
-        // or in the passed data prop.
+    // Get the data to display, either from getData or in the passed data prop
+    const filterData = props => {
         setGetDataError(null)
 
-        let result = props.getData
-            ? await props.getData(filters).catch(er => {
-                  setGetDataError(er)
-                  return []
-              })
-            : { data: props.data.slice(), recordCount: props.data.length }
+        return new Promise(async (resolve, reject) => {
+            let result = props.getData
+                ? await props.getData(filters).catch(er => {
+                      setGetDataError(er)
+                      return reject()
+                      return reject({ data: [], recordCount: 0 })
+                  })
+                : { data: props.data.slice(), recordCount: props.data.length }
 
-        setRecordCount(result.recordCount)
-        result = result.data
-
-        // filter by search text
-        if (filters.searchText) {
-            let search = filters.searchText.toLowerCase()
-            result = result.filter(row =>
-                Object.values(row).some(col => (col + '').toLowerCase().includes(search))
-            )
-        }
-
-        // local sorting
-        {
-            let key = filters.sortBy
-            if (key && filters.sortDesc != null) {
-                let sgn = filters.sortDesc ? -1 : 1
-                result.sort((a, b) => {
-                    return a[key] === b[key] ? 0 : a[key] > b[key] ? sgn : -sgn
-                })
+            // Filter by search text
+            // Note that this may already have been done by the getData function.
+            // todo: consider providing a "localSearch" prop to control this behaviour
+            if (filters.searchText) {
+                let search = filters.searchText.toLowerCase()
+                result.data = result.data.filter(row =>
+                    Object.values(row).some(col => (col + '').toLowerCase().includes(search))
+                )
+                // Update the recordCount if data is coming from props.data
+                if (!props.getData) result.recordCount = result.data.length
             }
-        }
 
-        setFilteredData(result)
-        return result
+            // local sorting
+            // todo: consider providing a "localSort" prop to control this behaviour
+            {
+                let key = filters.sortBy
+                if (key && filters.sortDesc != null) {
+                    let sgn = filters.sortDesc ? -1 : 1
+                    result.data.sort((a, b) => {
+                        return a[key] === b[key] ? 0 : a[key] > b[key] ? sgn : -sgn
+                    })
+                }
+            }
+
+            return resolve(result)
+        })
     }
 
     const getDisplayData = async props => {
         let result = await filterData(props)
+        // console.log('>> getDisplayData:', result)
+
+        recordCount = result.recordCount // setRecordCount won't work here, because it's batched
 
         // prevent page being > totalPages
-        const tp = totalPages(props)
-        if (filters.page > tp && tp > 0) setFilters({ ...filters, page: tp })
+        const totalPages = Math.ceil(recordCount / filters.pageSize)
+        if (filters.page > totalPages && totalPages > 0)
+            setFilters({ ...filters, page: totalPages })
 
         // Do local pagination
         if ((!props.getData && showPaginator(props)) || props.localPagination) {
             let start = (filters.page - 1) * filters.pageSize
-            result = result.slice(start, start + filters.pageSize)
+            result.data = result.data.slice(start, start + filters.pageSize)
         }
 
-        setDisplayData(result)
+        // trigger render
+        setRecordCount(recordCount)
+        setDisplayData(result.data)
     }
 
     // console.time('± table')
     const template = html`
             ${styles}
+            <pre>recordCount: ${recordCount}</pre>
             <div class="data-table">
                 ${props.slot && props.slot()}
                 <div style="display: flex; align-items: end; justify-content: flex-end;">
@@ -350,7 +339,7 @@ export default virtual((props = {}) => {
                             
                             <!-- No records message -->
                             ${
-                                (totalRecordCount(props) === 0 &&
+                                (recordCount === 0 &&
                                     html`<tr>
                                         <td colspan="100%">No records found</td>
                                     </tr>`) ||
@@ -376,15 +365,12 @@ export default virtual((props = {}) => {
                 >
                     ${
                         (props.showCounts &&
-                            totalRecordCount(props) > 0 &&
+                            recordCount > 0 &&
                             html`
                                 <span style="flex-grow: 1;"
                                     >Showing ${(filters.page - 1) * filters.pageSize + 1} to
-                                    ${Math.min(
-                                        filters.page * filters.pageSize,
-                                        totalRecordCount(props)
-                                    )}
-                                    of ${totalRecordCount(props)} records</span
+                                    ${Math.min(filters.page * filters.pageSize, recordCount)} of
+                                    ${recordCount} records</span
                                 >
                             `) ||
                         null
@@ -400,12 +386,12 @@ export default virtual((props = {}) => {
                     <!-- Optionally display the paginator  -->
                     ${
                         (showPaginator(props) &&
-                            totalRecordCount(props) &&
+                            recordCount &&
                             filters.pageSize &&
                             html`
                                 <lion-pagination
                                     id="abc"
-                                    .count=${Math.ceil(totalRecordCount(props) / filters.pageSize)}
+                                    .count=${Math.ceil(recordCount / filters.pageSize)}
                                     .current=${filters.page}
                                     @current-changed=${e =>
                                         setFilters({
