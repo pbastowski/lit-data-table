@@ -53,7 +53,7 @@ const config = {
         { a: 10, b: 'lasdgdf lala', c: 742 },
         { a: 11, b: 'lala7978 la', c: 6 }
     ],
-    showTable2: null
+    showTable2: true
 }
 
 export default virtual(props => {
@@ -167,5 +167,5 @@ function slotExpand(row) {
 }
 
 function slotItem(item, col, row) {
-    return item //html`${item}`
+    return col.field === 'id' ? html`<marquee>${item}</marquee>` : item
 }
