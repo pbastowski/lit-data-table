@@ -2,11 +2,12 @@ import 'font-awesome/css/font-awesome.min.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './main.scss'
 
-import { render } from 'haunted'
+import { render, component, virtual } from './libs.js'
 
 import App from './App.js'
 
-render(App(), document.querySelector('#app'))
+customElements.define('my-app', component(App, { useShadowDOM: false }))
+// render(virtual(App)(), document.querySelector('my-app'))
 
 window.runtest = () => {
     let c = 1

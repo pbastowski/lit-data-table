@@ -56,7 +56,7 @@ const config = {
     showTable2: true
 }
 
-export default virtual(props => {
+export default props => {
     const [state, setState] = useState(config)
 
     return html`
@@ -153,7 +153,7 @@ export default virtual(props => {
             slotExpand
         })}
     `
-})
+}
 
 function slotExpand(row) {
     return html`
