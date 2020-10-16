@@ -6,16 +6,7 @@ import http from 'axios'
 // import { useState } from './libs.js'
 // import { html, virtual } from 'haunted'
 
-const config = {
-    pageSize: 5,
-    paginator: {
-        maxSize: 5,
-        align: 'center',
-        size: 'md',
-        boundaryLinks: true
-    },
-    page: 1,
-    recordCount: null,
+const state = {
     columns: [
         {
             field: 'a',
@@ -52,22 +43,19 @@ const config = {
         { a: 9, b: 'lalagb la', c: 42 },
         { a: 10, b: 'lasdgdf lala', c: 742 },
         { a: 11, b: 'lala7978 la', c: 6 }
-    ],
-    showTable2: true
+    ]
 }
 
 export default props => {
-    const [state, setState] = useState(config)
+    const [showTable, setShowTable] = useState(true)
 
     return html`
         <h1>Data Table</h1>
 
-        <!--
-        <h3 b1>
-        The table below fetches data directly from
-        <small><code>jsonplaceholder.typicode.com/posts</code></small>
-        </h3>
-        -->
+        <h5>
+            The table below fetches data directly from
+            <small><code>jsonplaceholder.typicode.com/posts</code></small>
+        </h5>
 
         <br />
 
@@ -103,7 +91,7 @@ export default props => {
                 { field: 'title', label: 'Title', sortable: true, align: 'center' }
             ],
 
-            page: state.page,
+            page: 1,
             sortBy: 'title',
             // sortDesc: false,
             mustSort: true,
@@ -118,16 +106,10 @@ export default props => {
         })}
 
         <!-- -->
-        <button
-            id="testit"
-            @click=${() =>
-                state.showTable2
-                    ? setState({ ...state, showTable2: null })
-                    : setState({ ...state, showTable2: true })}
-        >
+        <button id="testit" @click=${() => (showTable ? setShowTable(null) : setShowTable(true))}>
             Click
         </button>
-        ${state.showTable2 &&
+        ${showTable &&
         DataTable({
             columns: state.columns,
             data: JSON.parse(JSON.stringify(state.data)),
