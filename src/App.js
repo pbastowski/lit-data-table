@@ -102,19 +102,19 @@ export default virtual(props => {
                 { field: 'id', label: 'id', sortable: true, width: '60px' },
                 { field: 'title', label: 'Title', sortable: true, align: 'center' }
             ],
+
             page: state.page,
-            paginator: state.paginator,
             sortBy: 'title',
             // sortDesc: false,
             mustSort: true,
+
+            paginator: true,
             pageSizeSelector: true,
             searchable: true,
             expandable: true,
 
             slotExpand,
             slotItem
-            // changePage: page => (state.page = page),
-            // changePageSize: pageSize => (state.pageSize = pageSize)
         })}
 
         <!-- -->
@@ -138,8 +138,8 @@ export default virtual(props => {
             // },
             // recordCount: 11,
 
-            page: 1, //state.page,
-            // pageSize: state.pageSize,
+            page: 1,
+            pageSize: 5,
             sortBy: 'b',
             sortDesc: false,
             mustSort: true,
@@ -151,8 +151,6 @@ export default virtual(props => {
             expandable: true,
 
             slotExpand
-            // changePage: page => (state.page = page),
-            // changePageSize: pageSize => (state.pageSize = pageSize)
         })}
     `
 })

@@ -39,9 +39,7 @@ export default virtual((props = {}) => {
         // paging, sorting and searching
         page: 1,
         pageSize: 5,
-        changePageSize: () => {},
-        changePage: () => {},
-        paginator: {},
+        paginator: true,
         pageSizeSelector: props.pageSizeSelector || null,
         localPagination: false,
 
@@ -128,8 +126,6 @@ export default virtual((props = {}) => {
             [col.itemClass]: true
         })
 
-    const showPaginator = props => props.paginator //&& typeof props.paginator === 'object'
-
     // Get the data to display, either from getData or in the passed data prop
     const filterData = props => {
         setGetDataError(null)
@@ -183,7 +179,7 @@ export default virtual((props = {}) => {
             setFilters({ ...filters, page: totalPages })
 
         // Do local pagination
-        if ((!props.getData && showPaginator(props)) || props.localPagination) {
+        if ((!props.getData && props.paginator) || props.localPagination) {
             let start = (filters.page - 1) * filters.pageSize
             result.data = result.data.slice(start, start + filters.pageSize)
         }
@@ -384,7 +380,7 @@ export default virtual((props = {}) => {
 
                     <!-- Optionally display the paginator  -->
                     ${
-                        (showPaginator(props) &&
+                        (props.paginator &&
                             recordCount &&
                             filters.pageSize &&
                             html`
@@ -397,7 +393,6 @@ export default virtual((props = {}) => {
                                             ...filters,
                                             page: e.target.current
                                         })}
-                                    Xcurrent-changed="${e => props.changePage(e.target.current)}}"
                                 ></lion-pagination>
                             `) ||
                         null
