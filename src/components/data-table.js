@@ -40,10 +40,10 @@ export default virtual((props = {}) => {
         page: 1,
         pageSize: 5,
         paginator: true,
-        pageSizeSelector: props.pageSizeSelector || null,
+        pageSizeSelector: null,
         localPagination: false,
 
-        searchable: props.searchable || null,
+        searchable: null,
 
         // display record stats
         showCounts: true,
