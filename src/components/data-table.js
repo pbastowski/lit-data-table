@@ -1,6 +1,5 @@
 import debounce from 'lodash/debounce'
-import { virtual, html, classMap, log, json, LionPagination, useState, useEffect } from '../libs.js'
-// import bind from '../bind.js'
+import { html, classMap, log, json, LionPagination, observe } from '../libs.js'
 
 customElements.define('lion-pagination', LionPagination)
 
@@ -24,7 +23,40 @@ const styles = html`<style>
     }
 </style>`
 
-export default virtual((props = {}) => {
+// {
+//     // data
+//     data = [],
+//     getData = null,
+//     columns = [],
+//
+//     // filters
+//     page = 1,
+//     pageSize = 5,
+//     sortBy = null,
+//     sortDesc = false,
+//     searchText = '',
+//     mustSort = false,
+//
+//     // controls
+//     paginator = true,
+//     pageSizeSelector = true,
+//     searchable = true,
+//     expandable = null,
+//
+//     // display record stats
+//     showCounts = true,
+//
+//     // slots
+//     slot = null,
+//     slotItem = null,
+//     slotHeaderCell = null,
+//     slotProgressBar = null,
+//     slotTopRight = null,
+//     slotPaginator = null,
+//     slotExpand = null
+// } = {}
+
+export default function (props = {}) {
     props = {
         // data
         data: [],
@@ -40,10 +72,10 @@ export default virtual((props = {}) => {
         page: 1,
         pageSize: 5,
         paginator: true,
-        pageSizeSelector: props.pageSizeSelector || null,
+        pageSizeSelector: true,
         localPagination: false,
 
-        searchable: props.searchable || null,
+        searchable: true,
 
         // display record stats
         showCounts: true,
@@ -59,28 +91,34 @@ export default virtual((props = {}) => {
         ...props
     }
 
-    const [displayData, setDisplayData] = useState([])
-    let [recordCount, setRecordCount] = useState(0)
-    const [getDataError, setGetDataError] = useState(null)
+    const state = observe(
+        {
+            displayData: [],
+            recordCount: 0,
+            getDataError: null
+        },
+        { batch: true }
+    )
 
-    const [filters, setFilters] = useState({
-        page: props.page,
-        pageSize: props.pageSize,
-        sortBy: props.sortBy,
-        sortDesc: props.sortDesc,
-        searchText: props.searchText || ''
-    })
+    const filters = observe(
+        {
+            page: props.page,
+            pageSize: props.pageSize,
+            sortBy: props.sortBy,
+            sortDesc: props.sortDesc,
+            searchText: props.searchText,
 
-    // Fetch data when the filters get updated
-    useEffect(() => {
-        getDisplayData(props)
-    }, [filters])
-
-    // useEffect(() => console.log('=== recordCount:', recordCount), [recordCount])
-    // useEffect(() => console.log('=== displayData:', recordCount, displayData), [displayData])
+            // Fetch data when the filters get updated
+            __handler(key, nv, ov) {
+                console.log('FILTERS', key, nv, ov)
+                getDisplayData(props)
+            }
+        },
+        { batch: true }
+    )
 
     const debounceSearch = debounce(function (ev) {
-        setFilters({ ...filters, searchText: ev.target.value })
+        filters.searchText = ev.target.value
     }, 400)
 
     const toggleExpanded = row => {
@@ -90,10 +128,6 @@ export default virtual((props = {}) => {
 
         // toggle its value
         row.$$expanded = !row.$$expanded
-
-        // The update below works because the row is passed by reference
-        // and thus is already in the displayData array
-        setDisplayData(displayData)
     }
 
     const sort = (col, props) => {
@@ -107,7 +141,8 @@ export default virtual((props = {}) => {
 
         sortBy = col.field
 
-        setFilters({ ...filters, sortBy, sortDesc })
+        filters.sortBy = sortBy
+        filters.sortDesc = sortDesc
     }
 
     const headerClasses = col =>
@@ -128,12 +163,12 @@ export default virtual((props = {}) => {
 
     // Get the data to display, either from getData or in the passed data prop
     const filterData = props => {
-        setGetDataError(null)
+        state.getDataError = null
 
         return new Promise(async (resolve, reject) => {
             let result = props.getData
                 ? await props.getData(filters).catch(er => {
-                      setGetDataError(er)
+                      state.getDataError = er
                       return reject()
                       return reject({ data: [], recordCount: 0 })
                   })
@@ -171,12 +206,9 @@ export default virtual((props = {}) => {
         let result = await filterData(props)
         // console.log('>> getDisplayData:', result)
 
-        recordCount = result.recordCount // setRecordCount won't work here, because it's batched
-
         // prevent page being > totalPages
-        const totalPages = Math.ceil(recordCount / filters.pageSize)
-        if (filters.page > totalPages && totalPages > 0)
-            setFilters({ ...filters, page: totalPages })
+        const totalPages = Math.ceil(result.recordCount / filters.pageSize)
+        if (filters.page > totalPages && totalPages > 0) filters.page = totalPages
 
         // Do local pagination
         if ((!props.getData && props.paginator) || props.localPagination) {
@@ -185,12 +217,14 @@ export default virtual((props = {}) => {
         }
 
         // trigger render
-        setRecordCount(recordCount)
-        setDisplayData(result.data)
+        state.recordCount = result.recordCount
+        state.displayData = result.data
     }
 
-    // console.time('± table')
-    const template = html`
+    // Render function
+    return () => {
+        // console.time('± table')
+        const template = html`
             ${styles}
             <div class="data-table">
                 ${props.slot && props.slot()}
@@ -206,12 +240,7 @@ export default virtual((props = {}) => {
                                     style="max-width: 100px;"
                                     class="form-control mx-2"
                                     .value=${filters.pageSize}
-                                    @change=${e => {
-                                        setFilters({
-                                            ...filters,
-                                            pageSize: Number(e.target.value)
-                                        })
-                                    }}
+                                    @change=${e => (filters.pageSize = Number(e.target.value))}
                                 >
                                     ${[5, 10, 25, 50, 100].map(
                                         size =>
@@ -311,7 +340,7 @@ export default virtual((props = {}) => {
 
                         <tbody>
                             <!-- data rows -->
-                            ${displayData.map(
+                            ${state.displayData.map(
                                 (row, index) => html`
                                     <tr @click=${() => toggleExpanded(row, props)}>
                                         ${props.columns.map(
@@ -334,7 +363,7 @@ export default virtual((props = {}) => {
                             
                             <!-- No records message -->
                             ${
-                                (recordCount === 0 &&
+                                (state.recordCount === 0 &&
                                     html`<tr>
                                         <td colspan="100%">No records found</td>
                                     </tr>`) ||
@@ -343,10 +372,10 @@ export default virtual((props = {}) => {
                             
                             <!-- error message -->
                             ${
-                                getDataError &&
+                                state.getDataError &&
                                 html`<tr>
                                     <td colspan="100%" style="background: lightcoral;">
-                                        ${getDataError}
+                                        ${state.getDataError}
                                     </td>
                                 </tr>`
                             }
@@ -360,12 +389,12 @@ export default virtual((props = {}) => {
                 >
                     ${
                         (props.showCounts &&
-                            recordCount > 0 &&
+                            state.recordCount > 0 &&
                             html`
                                 <span style="flex-grow: 1;"
                                     >Showing ${(filters.page - 1) * filters.pageSize + 1} to
-                                    ${Math.min(filters.page * filters.pageSize, recordCount)} of
-                                    ${recordCount} records</span
+                                    ${Math.min(filters.page * filters.pageSize, state.recordCount)}
+                                    of ${state.recordCount} records</span
                                 >
                             `) ||
                         null
@@ -381,18 +410,14 @@ export default virtual((props = {}) => {
                     <!-- Optionally display the paginator  -->
                     ${
                         (props.paginator &&
-                            recordCount &&
+                            state.recordCount &&
                             filters.pageSize &&
                             html`
                                 <lion-pagination
                                     id="abc"
-                                    .count=${Math.ceil(recordCount / filters.pageSize)}
+                                    .count=${Math.ceil(state.recordCount / filters.pageSize)}
                                     .current=${filters.page}
-                                    @current-changed=${e =>
-                                        setFilters({
-                                            ...filters,
-                                            page: e.target.current
-                                        })}
+                                    @current-changed=${e => (filters.page = e.target.current)}
                                 ></lion-pagination>
                             `) ||
                         null
@@ -408,6 +433,7 @@ export default virtual((props = {}) => {
             </div>
         `
 
-    // console.timeEnd('± table')
-    return template
-})
+        // console.timeEnd('± table')
+        return template
+    }
+}

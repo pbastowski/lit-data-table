@@ -1,12 +1,9 @@
 // import { html, observe, log, json } from './libs.js'
-import { html, virtual, useState, json } from './libs.js'
-import DataTable from './components/data-table.js'
+import { html, observe, json } from './libs.js'
+import dataTable from './components/data-table.js'
 import http from 'axios'
 
-// import { useState } from './libs.js'
-// import { html, virtual } from 'haunted'
-
-const state = {
+const config = {
     columns: [
         {
             field: 'a',
@@ -46,9 +43,70 @@ const state = {
     ]
 }
 
-export default props => {
-    const [showTable, setShowTable] = useState(true)
+const ServerTable = new dataTable({
+    getData({ sortBy, sortDesc, page, pageSize, searchText }) {
+        // console.log('GETDATA:', sortBy, sortDesc, page, pageSize, searchText)
+        let params = {
+            _sort: sortDesc != null ? sortBy : undefined,
+            _order: sortDesc != null ? (sortDesc ? 'desc' : 'asc') : undefined,
+            _page: page,
+            _limit: pageSize,
+            q: searchText
+        }
 
+        return http.get('https://jsonplaceholder.typicode.com/posts', { params }).then(result => {
+            return {
+                data: result.data,
+                recordCount: parseInt(result.headers['x-total-count'], 10)
+            }
+        })
+        // .catch(er => {
+        //     alert('Error !!!!!\n\n' + JSON.stringify(er))
+        //     return [{ title: 'Error!!!' }]
+        // })
+    },
+    // localPagination: true,
+    columns: [
+        { field: 'id', label: 'id', sortable: true, width: '60px' },
+        { field: 'title', label: 'Title', sortable: true, align: 'center' }
+    ],
+
+    sortBy: 'title',
+    mustSort: true,
+    expandable: true,
+
+    slotExpand,
+    slotItem
+})
+
+const LocalTable = new dataTable({
+    columns: config.columns,
+    data: JSON.parse(JSON.stringify(config.data)),
+    // getData: ({ page, pageSize }) => {
+    //     // console.log('GET DATA:')
+    //     return Promise.resolve(config.data)
+    //     return Promise.resolve(config.data.slice((page - 1) * pageSize, page * pageSize))
+    // },
+    // recordCount: 11,
+
+    page: 1,
+    pageSize: 5,
+    sortBy: 'b',
+    sortDesc: false,
+    mustSort: true,
+
+    paginator: true,
+    localPagination: true,
+    pageSizeSelector: true,
+    searchable: true,
+    expandable: true,
+
+    slotExpand
+})
+
+const state = observe({ showTable: true })
+
+export default props => {
     return html`
         <h1>Data Table</h1>
 
@@ -60,80 +118,13 @@ export default props => {
         <br />
 
         <!-- -->
-        ${true &&
-        DataTable({
-            getData({ sortBy, sortDesc, page, pageSize, searchText }) {
-                // console.log('GETDATA:', sortBy, sortDesc, page, pageSize, searchText)
-                let params = {
-                    _sort: sortDesc != null ? sortBy : undefined,
-                    _order: sortDesc != null ? (sortDesc ? 'desc' : 'asc') : undefined,
-                    _page: page,
-                    _limit: pageSize,
-                    q: searchText
-                }
-
-                return http
-                    .get('https://jsonplaceholder.typicode.com/posts', { params })
-                    .then(result => {
-                        return {
-                            data: result.data,
-                            recordCount: parseInt(result.headers['x-total-count'], 10)
-                        }
-                    })
-                // .catch(er => {
-                //     alert('Error !!!!!\n\n' + JSON.stringify(er))
-                //     return [{ title: 'Error!!!' }]
-                // })
-            },
-            // localPagination: true,
-            columns: [
-                { field: 'id', label: 'id', sortable: true, width: '60px' },
-                { field: 'title', label: 'Title', sortable: true, align: 'center' }
-            ],
-
-            page: 1,
-            sortBy: 'title',
-            // sortDesc: false,
-            mustSort: true,
-
-            paginator: true,
-            pageSizeSelector: true,
-            searchable: true,
-            expandable: true,
-
-            slotExpand,
-            slotItem
-        })}
+        ${true && ServerTable()}
 
         <!-- -->
-        <button id="testit" @click=${() => (showTable ? setShowTable(null) : setShowTable(true))}>
+        <button id="testit" @click=${() => (state.showTable = state.showTable ? null : true)}>
             Click
         </button>
-        ${showTable &&
-        DataTable({
-            columns: state.columns,
-            data: JSON.parse(JSON.stringify(state.data)),
-            // getData: ({ page, pageSize }) => {
-            //     // console.log('GET DATA:')
-            //     return Promise.resolve(state.data)
-            //     return Promise.resolve(state.data.slice((page - 1) * pageSize, page * pageSize))
-            // },
-            // recordCount: 11,
-
-            page: 1,
-            pageSize: 5,
-            sortBy: 'b',
-            sortDesc: false,
-            mustSort: true,
-
-            paginator: true,
-            localPagination: true,
-            pageSizeSelector: true,
-            searchable: true,
-            expandable: true,
-
-            slotExpand
-        })}
+        ${state.showTable && LocalTable()}
     `
 }
 

@@ -2,12 +2,14 @@ import 'font-awesome/css/font-awesome.min.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './main.scss'
 
-import { render, component, virtual } from './libs.js'
+import { render, computed } from './libs.js'
 
 import App from './App.js'
 
-customElements.define('my-app', component(App, { useShadowDOM: false }))
-// render(virtual(App)(), document.querySelector('my-app'))
+const target = document.querySelector('my-app')
+computed(() => {
+    render(App(), target)
+})
 
 window.runtest = () => {
     let c = 1
