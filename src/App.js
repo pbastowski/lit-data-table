@@ -46,7 +46,7 @@ const data = [
 ]
 
 export default props => {
-    const [showTable, setShowTable] = useState(true)
+    const [showTable, setShowTable] = useState(null)
 
     // Do this to prevent the initial whole app re-render when
     // we set a value for the first time after the user clicks "Click"
@@ -112,7 +112,7 @@ export default props => {
 
         <!-- -->
         <button id="testit" @click=${() => (showTable ? setShowTable(null) : setShowTable(true))}>
-            Click
+            ${showTable ? 'Hide' : 'Show'} second table
         </button>
         ${showTable &&
         DataTable({
