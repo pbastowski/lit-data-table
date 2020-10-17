@@ -1,5 +1,15 @@
 import debounce from 'lodash/debounce'
-import { virtual, html, classMap, log, json, LionPagination, useState, useEffect } from '../libs.js'
+import {
+    virtual,
+    html,
+    classMap,
+    log,
+    json,
+    LionPagination,
+    useState,
+    useEffect,
+    useObj
+} from '../libs.js'
 // import bind from '../bind.js'
 
 customElements.define('lion-pagination', LionPagination)
@@ -63,7 +73,7 @@ export default virtual((props = {}) => {
     let [recordCount, setRecordCount] = useState(0)
     const [getDataError, setGetDataError] = useState(null)
 
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useObj({
         page: props.page,
         pageSize: props.pageSize,
         sortBy: props.sortBy,
@@ -80,7 +90,8 @@ export default virtual((props = {}) => {
     // useEffect(() => console.log('=== displayData:', recordCount, displayData), [displayData])
 
     const debounceSearch = debounce(function (ev) {
-        setFilters({ ...filters, searchText: ev.target.value })
+        setFilters({ searchText: ev.target.value })
+        // setFilters({ ...filters, searchText: ev.target.value })
     }, 400)
 
     const toggleExpanded = row => {
@@ -107,7 +118,8 @@ export default virtual((props = {}) => {
 
         sortBy = col.field
 
-        setFilters({ ...filters, sortBy, sortDesc })
+        setFilters({ sortBy, sortDesc })
+        // setFilters({ ...filters, sortBy, sortDesc })
     }
 
     const headerClasses = col =>
@@ -175,8 +187,7 @@ export default virtual((props = {}) => {
 
         // prevent page being > totalPages
         const totalPages = Math.ceil(recordCount / filters.pageSize)
-        if (filters.page > totalPages && totalPages > 0)
-            setFilters({ ...filters, page: totalPages })
+        if (filters.page > totalPages && totalPages > 0) setFilters({ page: totalPages })
 
         // Do local pagination
         if ((!props.getData && props.paginator) || props.localPagination) {
@@ -206,12 +217,7 @@ export default virtual((props = {}) => {
                                     style="max-width: 100px;"
                                     class="form-control mx-2"
                                     .value=${filters.pageSize}
-                                    @change=${e => {
-                                        setFilters({
-                                            ...filters,
-                                            pageSize: Number(e.target.value)
-                                        })
-                                    }}
+                                    @change=${e => setFilters({ pageSize: Number(e.target.value) })}
                                 >
                                     ${[5, 10, 25, 50, 100].map(
                                         size =>
@@ -388,11 +394,7 @@ export default virtual((props = {}) => {
                                     id="abc"
                                     .count=${Math.ceil(recordCount / filters.pageSize)}
                                     .current=${filters.page}
-                                    @current-changed=${e =>
-                                        setFilters({
-                                            ...filters,
-                                            page: e.target.current
-                                        })}
+                                    @current-changed=${e => setFilters({ page: e.target.current })}
                                 ></lion-pagination>
                             `) ||
                         null

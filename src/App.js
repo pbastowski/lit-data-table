@@ -1,10 +1,7 @@
 // import { html, observe, log, json } from './libs.js'
-import { html, virtual, useState, useEffect, json } from './libs.js'
+import { html, virtual, useState, useEffect, json, reactive } from './libs.js'
 import DataTable from './components/data-table.js'
 import http from 'axios'
-
-// import { useState } from './libs.js'
-// import { html, virtual } from 'haunted'
 
 const columns = [
     {
@@ -47,6 +44,7 @@ const data = [
 
 export default props => {
     const [showTable, setShowTable] = useState(null)
+    let table = reactive({ show: null })
 
     // Do this to prevent the initial whole app re-render when
     // we set a value for the first time after the user clicks "Click"
@@ -56,6 +54,9 @@ export default props => {
 
     return html`
         <h1>Data Table</h1>
+        <pre>${json(table)}</pre>
+        <button @click=${() => (table.abc = 12)}>click</button>
+        <button @click=${() => (table.text = 'lalala')}>click 2</button>
 
         <h5>
             The table below fetches data directly from
@@ -98,7 +99,6 @@ export default props => {
 
             page: 1,
             sortBy: 'title',
-            // sortDesc: false,
             mustSort: true,
 
             paginator: true,
@@ -112,18 +112,17 @@ export default props => {
 
         <!-- -->
         <button id="testit" @click=${() => (showTable ? setShowTable(null) : setShowTable(true))}>
-            ${showTable ? 'Hide' : 'Show'} second table
+            <code>setShowTable(${showTable ? 'null' : 'true'})</code>
         </button>
-        ${showTable &&
+
+        <button @click=${() => (table.show = table.show ? null : true)}>
+            <code>table.show=${table.show ? 'null' : 'true'}</code>
+        </button>
+
+        ${(table.show || showTable) &&
         DataTable({
             columns: columns,
             data: JSON.parse(JSON.stringify(data)),
-            // getData: ({ page, pageSize }) => {
-            //     // console.log('GET DATA:')
-            //     return Promise.resolve(data)
-            //     return Promise.resolve(data.slice((page - 1) * pageSize, page * pageSize))
-            // },
-            // recordCount: 11,
 
             page: 1,
             pageSize: 5,
@@ -154,5 +153,5 @@ function slotExpand(row) {
 }
 
 function slotItem(item, col, row) {
-    return col.field === 'id' ? html`<marquee>${item}</marquee>` : item
+    return col.field === 'id' ? html`<marquee behavior="alternate">${item}</marquee>` : item
 }

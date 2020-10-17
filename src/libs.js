@@ -45,3 +45,22 @@ export const log = console.log.bind(console)
 // export { createRoutes } from './cr.js'
 
 export { LionPagination } from '@lion/pagination'
+
+import { useState } from 'haunted'
+
+export const useObj = obj => {
+    const [v, s] = useState(obj)
+    return [v, nv => s({ ...v, ...nv })]
+}
+
+export const reactive = obj => {
+    const [value, s] = useState(obj)
+    console.log('REACTIVE')
+
+    return new Proxy(value, {
+        set(o, p, nv) {
+            s({ ...value, [p]: nv })
+            return true
+        }
+    })
+}
