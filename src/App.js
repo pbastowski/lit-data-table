@@ -1,5 +1,5 @@
 // import { html, observe, log, json } from './libs.js'
-import { html, virtual, useState, json } from './libs.js'
+import { html, virtual, useState, useEffect, json } from './libs.js'
 import DataTable from './components/data-table.js'
 import http from 'axios'
 
@@ -48,6 +48,12 @@ const state = {
 
 export default props => {
     const [showTable, setShowTable] = useState(true)
+
+    // Do this to prevent the initial whole app re-render when
+    // we set a value for the first time after the user clicks "Click"
+    useEffect(() => {
+        setShowTable(showTable)
+    }, [])
 
     return html`
         <h1>Data Table</h1>
