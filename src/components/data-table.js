@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce'
-import { html, classMap, log, json, LionPagination, observe } from '../libs.js'
+import { html, classMap, log, json, LionPagination, observe, reactive } from '../libs.js'
 
 customElements.define('lion-pagination', LionPagination)
 
@@ -22,39 +22,6 @@ const styles = html`<style>
         border: none;
     }
 </style>`
-
-// {
-//     // data
-//     data = [],
-//     getData = null,
-//     columns = [],
-//
-//     // filters
-//     page = 1,
-//     pageSize = 5,
-//     sortBy = null,
-//     sortDesc = false,
-//     searchText = '',
-//     mustSort = false,
-//
-//     // controls
-//     paginator = true,
-//     pageSizeSelector = true,
-//     searchable = true,
-//     expandable = null,
-//
-//     // display record stats
-//     showCounts = true,
-//
-//     // slots
-//     slot = null,
-//     slotItem = null,
-//     slotHeaderCell = null,
-//     slotProgressBar = null,
-//     slotTopRight = null,
-//     slotPaginator = null,
-//     slotExpand = null
-// } = {}
 
 export default function (props = {}) {
     props = {
@@ -91,30 +58,25 @@ export default function (props = {}) {
         ...props
     }
 
-    const state = observe(
-        {
-            displayData: [],
-            recordCount: 0,
-            getDataError: null
-        },
-        { batch: true }
-    )
+    const state = reactive({
+        displayData: [],
+        recordCount: 0,
+        getDataError: null
+    })
 
-    const filters = observe(
+    const filters = reactive(
         {
             page: props.page,
             pageSize: props.pageSize,
             sortBy: props.sortBy,
             sortDesc: props.sortDesc,
-            searchText: props.searchText,
-
-            // Fetch data when the filters get updated
-            __handler(key, nv, ov) {
-                console.log('FILTERS', key, nv, ov)
-                getDisplayData(props)
-            }
+            searchText: props.searchText
         },
-        { batch: true }
+        (key, nv, ov) => {
+            // Fetch data when the filters get updated
+            console.log('FILTERS', key, nv, ov)
+            getDisplayData(props)
+        }
     )
 
     const debounceSearch = debounce(function (ev) {

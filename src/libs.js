@@ -5,6 +5,9 @@
 // so we first import hyperactiv and then destructure and export the methods we want.
 import hyperactiv from 'hyperactiv/src'
 export const { observe, computed, dispose } = hyperactiv
+export const ref = value => hyperactiv.observe({ value })
+export const reactive = (value, onChange, options = {}) =>
+    hyperactiv.observe({ ...value, __handler: onChange }, { batch: true, bind: true, ...options })
 
 // lit-html has lots of useful methods, of which we only want a subset.
 // The most useful to us are listed below.
