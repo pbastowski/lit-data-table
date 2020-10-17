@@ -221,6 +221,9 @@ export default function (props = {}) {
         state.displayData = result.data
     }
 
+    // fetch initial data
+    getDisplayData(props)
+
     // Render function
     return () => {
         // console.time('± table')
