@@ -17,7 +17,7 @@
     "dependencies": {
         "@lion/pagination": "0.2.0",
         "axios": "0.20.0",
-        "bootstrap": "4.5.2",
+        "bootstrap": "4.5.3",
         "font-awesome": "4.7.0",
         "haunted": "4.7.0",
         "hyperactiv": "0.8.4",
@@ -35,5 +35,8 @@
     "browserslist": [
         "last 1 Chrome versions"
     ],
-    "keywords": []
+    "keywords": [],
+    "alias": {
+        "react": "haunted"
+    }
 }

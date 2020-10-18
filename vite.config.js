@@ -1,4 +1,7 @@
 module.exports = {
+    alias: {
+        react: 'haunted'
+    },
     optimizeDeps: {
         include: [
             'lodash/debounce',
