@@ -55,7 +55,6 @@ export const useObj = obj => {
 
 export const reactive = obj => {
     const [value, s] = useState(obj)
-    console.log('REACTIVE')
 
     return new Proxy(value, {
         set(o, p, nv) {
