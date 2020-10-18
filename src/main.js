@@ -6,8 +6,8 @@ import { render, component, virtual } from './libs.js'
 
 import App from './App.js'
 
-// customElements.define('my-app', component(App, { useShadowDOM: false }))
-render(virtual(App)(), document.querySelector('my-app'))
+customElements.define('my-app', component(App, { useShadowDOM: false }))
+// render(virtual(App)(), document.querySelector('my-app'))
 
 window.runtest = () => {
     let c = 1

@@ -63,3 +63,26 @@ export const reactive = obj => {
         }
     })
 }
+
+// Create global state accessible to all components that import it
+export const createStore = store => {
+    let setStore, init
+
+    const setter = nv => {
+        // Update the store directly
+        store = { ...store, ...nv }
+        // Tell haunted that we updated it
+        setStore(store)
+    }
+
+    store.$set = setter
+
+    return () => {
+        // each component needs its own state
+        let [v, sv] = useState(store)
+        // but we only want the setter from the first useState
+        !init && ((init = true), (setStore = sv))
+
+        return [store, setter]
+    }
+}

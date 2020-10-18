@@ -1,7 +1,11 @@
 // import { html, observe, log, json } from './libs.js'
-import { html, virtual, useState, useEffect, json, reactive } from './libs.js'
+import { html, virtual, useState, useEffect, json, reactive, observe } from './libs.js'
 import DataTable from './components/data-table.js'
 import http from 'axios'
+
+import Test3 from './Test3.js'
+import Messages from './Messages.js'
+import useStore, { doStuff } from './store/main.js'
 
 const columns = [
     {
@@ -44,7 +48,9 @@ const data = [
 
 export default props => {
     const [showTable, setShowTable] = useState(null)
-    let table = reactive({ show: null })
+    const [state, setState] = useStore()
+
+    const table = reactive({ show: null })
 
     // Do this to prevent the initial whole app re-render when
     // we set a value for the first time after the user clicks "Click"
@@ -53,10 +59,18 @@ export default props => {
     }, [])
 
     return html`
-        <h1>Data Table</h1>
-        <pre>${json(table)}</pre>
-        <button @click=${() => (table.abc = 12)}>click</button>
-        <button @click=${() => (table.text = 'lalala')}>click 2</button>
+        <h1 class="d-flex">Data Table <span class="ml-auto">${Messages()}</span></h1>
+
+        <div class="d-flex justify-content-around">
+            <div>
+                <pre>${json(state)}</pre>
+                <button @click=${() => setState({ abc: ++state.abc })}>abc++</button>
+                <button @click=${() => setState({ text: 'lalala' })}>click 2</button>
+                <button @click=${() => doStuff()}>Do stuff</button>
+            </div>
+            <!--            <div class="flex-grow-1"></div>-->
+            <div>${Test3()}</div>
+        </div>
 
         <h5>
             The table below fetches data directly from
@@ -110,16 +124,17 @@ export default props => {
             slotItem
         })}
 
-        <!-- -->
+        <!--
         <button id="testit" @click=${() => (showTable ? setShowTable(null) : setShowTable(true))}>
             <code>setShowTable(${showTable ? 'null' : 'true'})</code>
         </button>
+        -->
 
-        <button @click=${() => (table.show = table.show ? null : true)}>
+        <button id="testit" @click=${() => (table.show = table.show ? null : true)}>
             <code>table.show=${table.show ? 'null' : 'true'}</code>
         </button>
 
-        ${(table.show || showTable) &&
+        ${table.show &&
         DataTable({
             columns: columns,
             data: JSON.parse(JSON.stringify(data)),
