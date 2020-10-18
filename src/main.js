@@ -17,7 +17,7 @@ window.runtest = () => {
     let c = 1
     const f = () => {
         document.querySelector('#testit').click()
-        c++ < 1000 && setTimeout(f, 60)
+        c++ < 10000 && setTimeout(f, 60)
     }
     f()
 }

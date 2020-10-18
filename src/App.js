@@ -2,6 +2,9 @@
 import { html, ref, json } from './libs.js'
 import dataTable from './components/data-table.js'
 import http from 'axios'
+import state from './store/main.js'
+import Messages from './Messages.js'
+import Test3 from './Test3.js'
 
 const columns = [
     {
@@ -107,7 +110,18 @@ const showTable = ref(true)
 
 export default props => {
     return html`
-        <h1>Data Table</h1>
+        <h1 class="d-flex">Data Table <span class="ml-auto">${Messages()}</span></h1>
+
+        <div class="d-flex justify-content-around">
+            <div>
+                <pre>${json(state)}</pre>
+                <button @click="${() => state.abc++})}">abc++</button>
+                <button @click=${() => (state.text = 'lalala')}>click 2</button>
+                <button @click=${() => state.doStuff()}>Do stuff</button>
+            </div>
+            <!--            <div class="flex-grow-1"></div>-->
+            <div>${Test3()}</div>
+        </div>
 
         <h5>
             The table below fetches data directly from
