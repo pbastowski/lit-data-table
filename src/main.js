@@ -8,9 +8,9 @@ import App from './App.js'
 
 const target = document.querySelector('my-app')
 computed(() => {
-    console.time('± render')
+    // console.time('± render')
     render(App(), target)
-    console.timeEnd('± render')
+    // console.timeEnd('± render')
 })
 
 window.runtest = () => {

@@ -139,5 +139,5 @@ function slotExpand(row) {
 }
 
 function slotItem(item, col, row) {
-    return col.field === 'id' ? html`<marquee>${item}</marquee>` : item
+    return col.field === 'id' ? html`<marquee behavior="alternate">${item}</marquee>` : item
 }
