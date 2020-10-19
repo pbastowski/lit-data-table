@@ -107,7 +107,7 @@ export default props => {
             },
             // localPagination: true,
             columns: [
-                { field: 'id', label: 'id', sortable: true, width: '60px' },
+                { field: 'id', label: 'id', sortable: true, width: '60px', align: 'right' },
                 { field: 'title', label: 'Title', sortable: true, align: 'center' }
             ],
 
@@ -167,6 +167,8 @@ function slotExpand(row) {
     `
 }
 
-function slotItem(item, col, row) {
-    return col.field === 'id' ? html`<marquee behavior="alternate">${item}</marquee>` : item
+function slotItem(value, column, row) {
+    return column.field === 'id'
+        ? html`<button @click=${e => e.stopPropagation()}>${value}</button>`
+        : value
 }

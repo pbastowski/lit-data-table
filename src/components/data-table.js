@@ -10,7 +10,6 @@ import {
     useEffect,
     useObj
 } from '../libs.js'
-// import bind from '../bind.js'
 
 customElements.define('lion-pagination', LionPagination)
 
@@ -85,9 +84,6 @@ export default virtual((props = {}) => {
     useEffect(() => {
         getDisplayData(props)
     }, [filters])
-
-    // useEffect(() => console.log('=== recordCount:', recordCount), [recordCount])
-    // useEffect(() => console.log('=== displayData:', recordCount, displayData), [displayData])
 
     const debounceSearch = debounce(function (ev) {
         setFilters({ searchText: ev.target.value })
